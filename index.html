@@ -766,21 +766,65 @@ const SP = {
 };
 
 // ════════════════════════════════════════════════════════════════════════
-// STATE — local cache synced from SharePoint
+// STATE — localStorage
 // ════════════════════════════════════════════════════════════════════════
+const CACHE_KEY = 'nrar_register_v31';
+
 let state = {
-  registers: {},   // { id: { id, name, code, owner, desc, parent, spId, risks:[] } }
+  registers: {},
   ciActions: [],
   changelog: [],
-  standingItems: [],
-  spUrl: '',
-  isConnected: false,
-  lastSync: null
+  standingItems: []
 };
 
+function saveState() {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(state)); } catch(e) {}
+}
 
+function loadState() {
+  try {
+    const d = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+    if (d.registers)     state.registers     = d.registers;
+    if (d.ciActions)     state.ciActions     = d.ciActions;
+    if (d.changelog)     state.changelog     = d.changelog;
+    if (d.standingItems) state.standingItems = d.standingItems;
+  } catch(e) {}
+}
 
-// localStorage functions now in state layer above
+function buildInitialState() {
+  const risks = [
+    {id:'SR-05',category:'Strategic | Accountability & Assurance | Governance & Decision-Making',title:'NSW Audit Office Findings - Data, Risk, Governance, Decision-Making',desc:'NSW Audit Office preliminary findings indicate material deficiencies in data quality, risk governance, and decision-making documentation. The window for getting ahead of findings is narrow and closing.',cause:'Systemic data quality gaps; absent IRQAF; inconsistent decision-making documentation; QMS methodology misalignment with external accountability standards.',consequence:'Published adverse report; challenge to regulatory decisions; funding risk at next Budget; weakened position in independence review and IGWC assessments; legal exposure on enforcement decisions.',inhL:5,inhC:4,controls:'1. Internal QMS audit program.\n2. Audit Office engagement process underway.\n3. IRQAF draft under development.\n4. Peloton data management project commenced.',ctrlOwner:'CEO / Chief Regulatory Officer',ctrlEff:'Ineffective',resL:4,resC:3,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Every Board meeting',escalation:'Final Audit Office report publication; any Ministerial or parliamentary inquiry referencing findings.',ciAction:'Board to direct management to prepare remediation plan within 30 days; adopt IRQAF immediately; seek legal advice on decision-making documentation exposure.',ciOwner:'CEO / CRO',ciDate:'2026-04-30',ciStatus:'In Progress',ciOutcome:'All Audit Office findings closed; no repeat findings in next review cycle.',linked:'Strategic Risk Register; Audit Findings Register',nextReview:'2026-04-30',escalatedTo:''},
+    {id:'SR-10',category:'Strategic | Regulatory Effectiveness | Information & Data',title:'WaterNSW - Unreliable Data & Operating Licence Non-Conformance',desc:"NRAR's regulatory functions are structurally dependent on WaterNSW data it does not generate or control, with no formal data sharing agreement in place.",cause:'Absent formal data sharing agreement; no DAS outage notification protocol; no evidentiary certification standard.',consequence:'Undetected non-compliance during telemetry gaps; failed or weakened prosecutions; legally challenged enforcement decisions.',inhL:5,inhC:4,controls:'1. Informal staff-level relationships with WaterNSW data teams.\n2. Ad hoc requests for DAS data.\n3. NRAR internal data quality processes.\n4. No formal data sharing agreement - NO EFFECTIVE CONTROL.',ctrlOwner:'Chief Regulatory Officer / Director Data & Analytics',ctrlEff:'Ineffective',resL:4,resC:3,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Every Board meeting',escalation:'Failed prosecution attributable to WaterNSW data failure.',ciAction:'Negotiate formal data sharing agreement with WaterNSW within 90 days.',ciOwner:'CRO / CEO',ciDate:'2026-06-30',ciStatus:'In Progress',ciOutcome:'Data sharing agreement executed; evidentiary certification protocol adopted.',linked:'Strategic Risk Register; Data Management Problem Statement',nextReview:'2026-04-30',escalatedTo:''},
+    {id:'SR-01',category:'Strategic | Regulatory Effectiveness | Governance & Decision-Making',title:'Regulatory Effectiveness - Process Quality, Decision-Making & Data Management',desc:"Enterprise-wide risk that NRAR's regulatory effectiveness is structurally undermined by inconsistent process quality, absent evidence framework, and unreliable data environment.",cause:'Absence of IRQAF; no enterprise data strategy; no named data stewards; siloed operations.',consequence:'Legal vulnerability in enforcement decisions; inability to demonstrate risk-based regulation to IGWC; Strategic Plan delivery at risk.',inhL:4,inhC:4,controls:'1. IRQAF framework draft under development.\n2. Peloton data management project underway.\n3. QMS internal audit program in place.\n4. RegWorks case management system operational.',ctrlOwner:'Chief Regulatory Officer / Director Data & Analytics',ctrlEff:'Ineffective',resL:4,resC:3,owner:'Chief Regulatory Officer',appetite:'Low',boardFreq:'Quarterly',escalation:'Audit Office final report published; IGWC inquiry referencing data/process adequacy.',ciAction:'Adopt IRQAF; complete Peloton data audit; reconcile QMS vs Audit Office findings.',ciOwner:'CRO / Director D&A',ciDate:'2026-06-30',ciStatus:'In Progress',ciOutcome:'IRQAF adopted by Board; Peloton Phase 1 complete; zero Audit Office findings outstanding.',linked:'Enterprise Risk Register; Audit Office Findings Register',nextReview:'2026-06-30',escalatedTo:''},
+  ];
+
+  state.registers = {
+    enterprise: {
+      id:'enterprise', name:'Enterprise Risk Register', code:'ERR',
+      owner:'Chief Regulatory Officer', isEnterprise:true,
+      desc:'Board-level strategic risks. Aligned to RMF Risk Descriptors (Feb 2026) & IRQAF Framework.',
+      parent:'', risks
+    },
+    dg: {
+      id:'dg', name:'Data Governance Risk Register', code:'DG',
+      owner:'Director Data & Analytics', isEnterprise:false,
+      desc:'Operational risks arising from data quality, data management, and information asset governance gaps.',
+      parent:'SR-05, SR-01', risks:[]
+    },
+    rim: {
+      id:'rim', name:'Records & Information Management Register', code:'RIM',
+      owner:'Chief Regulatory Officer', isEnterprise:false,
+      desc:'Operational risks arising from records management, retention, and NSW State Records Act compliance.',
+      parent:'SR-05', risks:[]
+    },
+    int: {
+      id:'int', name:'Regulatory Intelligence Risk Register', code:'INT',
+      owner:'Director ISI', isEnterprise:false,
+      desc:"Risks to NRAR's intelligence collection, analysis, and dissemination capability.",
+      parent:'SR-06', risks:[]
+    },
+  };
+}
 
 // ════════════════════════════════════════════════════════════════════════
 // HELPERS
