@@ -1606,14 +1606,57 @@ function importJSON(e){
   const reader=new FileReader();
   reader.onload=ev=>{
     try {
-      const d=JSON.parse(ev.target.result);
-      if(confirm('Import will replace local cache. SharePoint data is unaffected. Continue?')){
-        state={...state,...d}; saveState(); renderAll();
-        toast('Import successful','success');
+      const raw=ev.target.result;
+      const d=JSON.parse(raw);
+
+      // Validate it looks like a register export
+      if(!d.registers && !d.risks){
+        toast('File does not appear to be a valid Risk Register export','error',5000);
+        return;
       }
-    } catch{toast('Invalid JSON file','error');}
+
+      if(!confirm(`Import "${file.name}"?\n\nThis will replace your current register data. Your existing data will be overwritten. Continue?`)){
+        return;
+      }
+
+      // Full state import
+      if(d.registers){
+        if(d.registers) state.registers = d.registers;
+        if(d.ciActions) state.ciActions = d.ciActions;
+        if(d.changelog) state.changelog = d.changelog || [];
+        if(d.standingItems) state.standingItems = d.standingItems || [];
+      }
+
+      // Merge mode (risks-only import into enterprise register)
+      if(d._mergeMode && d.risks && d._mergeTarget){
+        const reg = state.registers[d._mergeTarget];
+        if(reg){
+          d.risks.forEach(incoming=>{
+            const idx = reg.risks.findIndex(r=>r.id===incoming.id);
+            if(idx>=0) reg.risks[idx]={...reg.risks[idx],...incoming};
+            else reg.risks.push(incoming);
+          });
+          toast(`Merged ${d.risks.length} risks into ${reg.name}`,'success');
+          saveState(); renderAll();
+          e.target.value='';
+          return;
+        }
+      }
+
+      // Count what was imported
+      const riskCount = Object.values(state.registers).reduce((n,r)=>n+(r.risks||[]).length,0);
+      const regCount = Object.keys(state.registers).length;
+
+      saveState();
+      renderAll();
+      toast(`Import successful — ${riskCount} risks across ${regCount} registers loaded`,'success');
+    } catch(err){
+      console.error('Import error:', err);
+      toast('Import failed: ' + (err.message||'Invalid JSON file'),'error',6000);
+    }
+    e.target.value=''; // reset so same file can be re-imported
   };
-  reader.readAsText(file);
+  reader.readAsText(file,'UTF-8');
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -1689,118 +1732,4 @@ function renderAll(){
 })();
 </script>
 </body>
-</html><script>
-// ════════════════════════════════════════════════════════════════════════
-// STATE — localStorage
-// ════════════════════════════════════════════════════════════════════════
-const CACHE_KEY = 'nrar_register_v31';
-
-let state = {
-  registers: {},
-  ciActions: [],
-  changelog: [],
-  standingItems: []
-};
-
-function saveState() {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(state)); } catch(e) {}
-}
-
-function loadState() {
-  try {
-    const d = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-    if (d.registers)     state.registers     = d.registers;
-    if (d.ciActions)     state.ciActions     = d.ciActions;
-    if (d.changelog)     state.changelog     = d.changelog;
-    if (d.standingItems) state.standingItems = d.standingItems;
-  } catch(e) {}
-}
-
-// ════════════════════════════════════════════════════════════════════════
-// INITIAL RISK DATA
-// ════════════════════════════════════════════════════════════════════════
-function buildInitialState() {
-  const risks = [
-    {id:'SR-05',category:'Strategic | Accountability & Assurance | Governance & Decision-Making',title:'NSW Audit Office Findings — Data, Risk, Governance, Decision-Making',desc:'NSW Audit Office preliminary findings indicate material deficiencies in data quality, risk governance, and decision-making documentation. The window for getting ahead of findings is narrow and closing.',cause:'Systemic data quality gaps; absent IRQAF; inconsistent decision-making documentation; QMS methodology misalignment with external accountability standards.',consequence:'Published adverse report; challenge to regulatory decisions; funding risk at next Budget; weakened position in independence review and IGWC assessments; legal exposure on enforcement decisions.',inhL:5,inhC:4,controls:'1. Internal QMS audit program.
-2. Audit Office engagement process underway.
-3. IRQAF draft under development.
-4. Peloton data management project commenced.',ctrlOwner:'CEO / Chief Regulatory Officer',ctrlEff:'Ineffective',resL:4,resC:3,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Every Board meeting',escalation:'Final Audit Office report publication; any Ministerial or parliamentary inquiry referencing findings.',ciAction:'Board to direct management to prepare remediation plan within 30 days; adopt IRQAF immediately; seek legal advice on decision-making documentation exposure.',ciOwner:'CEO / CRO',ciDate:'2026-04-30',ciStatus:'In Progress',ciOutcome:'All Audit Office findings closed; no repeat findings in next review cycle.',linked:'Strategic Risk Register; Audit Findings Register',nextReview:'2026-04-30',escalatedTo:''},
-    {id:'SR-10',category:'Strategic | Regulatory Effectiveness | Information & Data',title:'WaterNSW — Unreliable Data & Operating Licence Non-Conformance',desc:"NRAR's regulatory functions are structurally dependent on WaterNSW data it does not generate or control, with no formal data sharing agreement in place.",cause:'Absent formal data sharing agreement; no DAS outage notification protocol; no evidentiary certification standard.',consequence:'Undetected non-compliance during telemetry gaps; failed or weakened prosecutions; legally challenged enforcement decisions.',inhL:5,inhC:4,controls:'1. Informal staff-level relationships with WaterNSW data teams.
-2. Ad hoc requests for DAS data.
-3. NRAR internal data quality processes (identify symptoms only).
-4. No formal data sharing agreement — NO EFFECTIVE CONTROL.',ctrlOwner:'Chief Regulatory Officer / Director Data & Analytics',ctrlEff:'Ineffective',resL:4,resC:3,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Every Board meeting',escalation:'Failed prosecution attributable to WaterNSW data failure; WaterNSW refusal to negotiate data sharing agreement within 60 days.',ciAction:'Negotiate formal data sharing agreement with WaterNSW within 90 days; establish WaterNSW operating licence conformance monitoring; develop evidentiary data certification protocol.',ciOwner:'CRO / CEO',ciDate:'2026-06-30',ciStatus:'In Progress',ciOutcome:'Data sharing agreement executed; evidentiary certification protocol adopted.',linked:'Strategic Risk Register; Data Management Problem Statement',nextReview:'2026-04-30',escalatedTo:''},
-    {id:'NR-B',category:'Strategic | Legal & Regulatory Integrity Risk | Governance & Decision-Making',title:'Legal Challenge / Judicial Review — Enforcement Decision Precedent Risk',desc:"A successful judicial review of an NRAR enforcement decision on procedural defect grounds creates precedent that can be used to challenge a class of NRAR's decisions.",cause:'Inadequate decision-making documentation; reliance on data with uncertain provenance; inconsistent enforcement criteria application; absence of IRQAF.',consequence:'Precedent that invalidates a class of NRAR enforcement decisions; obligation to reopen closed cases; legal costs; enforcement paralysis; loss of deterrence effect.',inhL:5,inhC:4,controls:'1. NRAR legal team review of enforcement decisions (inconsistent).
-2. Investigation procedures (not fully documented or applied uniformly).
-3. Delegations register (maintained).
-4. No systematic decision documentation standard — GAP.',ctrlOwner:'Chief Regulatory Officer / General Counsel',ctrlEff:'Ineffective',resL:4,resC:4,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Every Board meeting',escalation:'Any judicial review application filed against NRAR; Audit Office finding on decision-making documentation.',ciAction:'1. Implement mandatory decision documentation standard within 60 days.
-2. Legal review of current enforcement pipeline within 30 days.
-3. Develop evidentiary data certification protocol with ODPP.',ciOwner:'CRO / General Counsel',ciDate:'2026-06-30',ciStatus:'In Progress',ciOutcome:'Decision documentation standard implemented; zero successful judicial reviews on procedural grounds.',linked:'Enterprise Risk Register; Legal Matters Register; Enforcement Procedures',nextReview:'2026-04-30',escalatedTo:''},
-    {id:'NR-F',category:'Strategic | Regulatory Effectiveness | Regulated Entity Behaviour & Capability Risk',title:'Dark Figure — Cumulative Undetected Non-Compliance at Scale',desc:"NRAR cannot know how much non-compliance it is not detecting, given structural gaps in telemetry coverage, metering accuracy, external data reliability, and intelligence capability.",cause:'Structural metering and telemetry coverage gaps; incomplete DAS coverage; intelligence function absent; priority programs based on visible rather than risk-ranked non-compliance; no dark figure estimation methodology.',consequence:'Valley-scale SDL non-compliance; irreversible environmental harm in sensitive catchments; retrospective finding that NRAR's compliance program was structurally inadequate.',inhL:5,inhC:4,controls:'1. Annual compliance priority program.
-2. Telemetry monitoring of metered population (incomplete).
-3. Community tip-off program.
-4. No dark figure estimation — GAP.',ctrlOwner:'Chief Regulatory Officer / Director Data & Analytics',ctrlEff:'Ineffective',resL:4,resC:4,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Quarterly',escalation:'Independent hydrological assessment suggesting valley-scale over-extraction inconsistent with NRAR compliance record.',ciAction:'1. Develop dark figure estimation methodology using independent hydrological analysis — within 12 months.
-2. Build regulated population risk profile covering all active NSW licence holders.',ciOwner:'CRO / Director D&A',ciDate:'2027-03-31',ciStatus:'Planned',ciOutcome:'Dark figure estimation methodology adopted; regulated population risk profile operational.',linked:'Regulatory Risk Profile; Intelligence Framework Register',nextReview:'2026-06-30',escalatedTo:''},
-    {id:'SR-01',category:'Strategic | Regulatory Effectiveness | Governance & Decision-Making',title:'Regulatory Effectiveness — Process Quality, Decision-Making & Data Management',desc:"Enterprise-wide risk that NRAR's regulatory effectiveness is structurally undermined by inconsistent process quality, absent evidence framework, and unreliable data environment.",cause:'Absence of IRQAF; no enterprise data strategy; no named data stewards; siloed operations.',consequence:'Legal vulnerability in enforcement decisions; inability to demonstrate risk-based regulation to IGWC; Strategic Plan delivery at risk by 1 July 2026.',inhL:4,inhC:4,controls:'1. IRQAF framework (draft under development).
-2. Peloton data management project underway.
-3. QMS internal audit program in place.
-4. RegWorks case management system operational.',ctrlOwner:'Chief Regulatory Officer / Director Data & Analytics',ctrlEff:'Ineffective',resL:4,resC:3,owner:'Chief Regulatory Officer',appetite:'Low',boardFreq:'Quarterly',escalation:'Audit Office final report published; IGWC inquiry referencing data/process adequacy; Strategic Plan go-live deadline missed.',ciAction:'Adopt IRQAF; complete Peloton data audit; reconcile QMS vs Audit Office findings; rebuild KPI framework on quality-assured data.',ciOwner:'CRO / Director D&A',ciDate:'2026-06-30',ciStatus:'In Progress',ciOutcome:'IRQAF adopted by Board; Peloton Phase 1 complete; zero Audit Office findings outstanding.',linked:'Enterprise Risk Register; Audit Office Findings Register; Peloton Project Register',nextReview:'2026-06-30',escalatedTo:''},
-    {id:'IR-01',category:'Strategic | Water Market & Industry | Regulated Entity Behaviour & Capability Risk',title:'Iran Conflict — Economic Shock & Elevated Irrigator Non-Compliance Risk',desc:'Escalating conflict in Iran is generating a significant global economic shock with direct transmission to Australian irrigators through oil prices, diesel costs, fertiliser prices, and trade disruption.',cause:'Geopolitical disruption → oil/diesel/fertiliser price inflation → irrigator margin compression → non-compliance incentive shift → NRAR intelligence gap fails to detect.',consequence:'Elevated non-compliance rates across multiple high-volume sectors simultaneously; SDL breach risk at valley scale; IGWC scrutiny of priority program adequacy.',inhL:4,inhC:4,controls:'1. Annual compliance priority program.
-2. Telemetry and DAS monitoring (with known gaps).
-3. Metering compliance requirements.
-4. No economic stress indicator monitoring — GAP.',ctrlOwner:'Chief Regulatory Officer / Director Compliance & Enforcement',ctrlEff:'Ineffective',resL:4,resC:3,owner:'Chief Regulatory Officer',appetite:'Low',boardFreq:'Quarterly',escalation:'Diesel price sustained above $2.50/L nationally; cluster of metering non-compliance detections.',ciAction:'Adjust 2026 priority programs to reflect financially stressed sectors; commission economic stress intelligence scan within 30 days.',ciOwner:'CRO / Director C&E',ciDate:'2026-04-30',ciStatus:'In Progress',ciOutcome:'Priority program adjustment documented and IGWC-notified; economic stress scan completed.',linked:'Regulatory Risk Profile; Priority Program Register',nextReview:'2026-06-30',escalatedTo:''},
-    {id:'NR-A',category:'Operational | Workforce | Capability & Skills Risk',title:'Workforce Capability & Specialist Skill Attrition',desc:"NRAR's regulatory functions require a rare combination of specialist skills that does not exist at scale in NSW and cannot be quickly rebuilt once lost.",cause:'Constrained public sector remuneration; high demand for water specialists; no workforce succession plan; knowledge concentrated in small number of individuals.',consequence:'Weakened enforcement cases; inconsistent regulatory decisions; reduced capacity to conduct complex floodplain harvesting and groundwater investigations.',inhL:4,inhC:4,controls:'1. NSW Public Sector employment framework.
-2. On-the-job training and mentoring (informal).
-3. Recruitment processes operational.
-4. No formal succession plan — GAP.',ctrlOwner:'CEO / People & Culture Lead',ctrlEff:'Ineffective',resL:4,resC:3,owner:'Chief Regulatory Officer',appetite:'Low',boardFreq:'Bi-annually',escalation:'Loss of two or more senior investigators or hydrologists within 12 months.',ciAction:'1. Develop workforce capability and succession plan within 6 months.
-2. Build competency framework for all regulatory roles aligned to AELERT MRIT.',ciOwner:'CEO / People & Culture Lead',ciDate:'2026-09-30',ciStatus:'Planned',ciOutcome:'Workforce succession plan adopted; competency framework operational.',linked:'Enterprise Risk Register; Workforce Planning Register; MRIT Assessment',nextReview:'2026-09-30',escalatedTo:''},
-    {id:'SR-02',category:'Strategic | Governance & Decision-Making | Integrity & Independence',title:'Regulatory Independence — Ministerial Review (~6 months)',desc:"The Minister will undertake a review of NRAR's independence settings within approximately six months.",cause:'Scheduled Ministerial review; unresolved governance gaps; potential stakeholder lobbying; Audit Office findings outstanding.',consequence:"Constraints on NRAR's operating independence; changes to governance model or mandate.",inhL:3,inhC:4,controls:'1. Board oversight of strategic governance improvement program.
-2. CEO Ministerial relationship management.
-3. NRAR Strategic Plan 2026 articulates independence principles.',ctrlOwner:'Chair / CEO',ctrlEff:'Partially Effective',resL:2,resC:3,owner:'Board',appetite:'Low',boardFreq:'Every Board meeting',escalation:"Any indication Minister considering structural changes to NRAR's independence settings.",ciAction:'Develop Board-endorsed independence review preparation plan; resolve Audit Office findings before review.',ciOwner:'CEO / Chair',ciDate:'2026-09-30',ciStatus:'Planned',ciOutcome:"Independence review concluded with no reduction in NRAR's operating independence.",linked:'Strategic Risk Register; Board Governance Register',nextReview:'2026-06-30',escalatedTo:''},
-    {id:'SR-03',category:'Strategic | Strategic Financial Sustainability Risk',title:'Funding Adequacy — Long-Term Financial Resilience',desc:"NRAR's ability to deliver its regulatory mandate over the medium term is contingent on maintaining adequate and appropriately structured funding.",cause:'NSW fiscal constraint; efficiency dividend pressure; absence of Outcomes Measures Framework; potential unfunded function expansion.',consequence:'Reduced regulatory capacity; hollowing out of existing capability; inability to deliver Strategic Plan.',inhL:3,inhC:4,controls:'1. Annual Budget submission process.
-2. CEO Treasury and Ministerial relationship management.
-3. NRAR cost-recovery levy framework.',ctrlOwner:'CEO / CFO',ctrlEff:'Partially Effective',resL:3,resC:3,owner:'Chief Regulatory Officer',appetite:'Low',boardFreq:'Bi-annually',escalation:'Budget submission; efficiency dividend announcement; function transfer proposal without confirmed funding.',ciAction:'Deliver Outcomes Measures Framework before next Budget cycle; adopt Board policy that no function acquisition proceeds without confirmed ongoing funding.',ciOwner:'CEO / CFO',ciDate:'2026-12-31',ciStatus:'Planned',ciOutcome:'Outcomes Framework operational; Board funding policy adopted.',linked:'Strategic Risk Register; Budget Planning Register',nextReview:'2026-09-30',escalatedTo:''},
-    {id:'SR-06',category:'Strategic | Stakeholder Trust & Confidence | Reputation & Public Confidence',title:'Irrigators Council — CEO Transition & Elevated Lobby Dynamics',desc:'Appointment of Madeleine Hartley as CEO of the Irrigators Council represents a material shift in the external stakeholder environment.',cause:'CEO transition; NRAR governance gaps providing legitimate advocacy leverage; Iran economic shock amplifying irrigator financial stress.',consequence:'Escalated public criticism; challenges to enforcement decisions; adverse influence on Ministerial independence review.',inhL:4,inhC:3,controls:'1. CEO stakeholder relationship management program.
-2. NRAR public communications framework.
-3. Enforcement transparency and consistency frameworks (partial).',ctrlOwner:'CEO',ctrlEff:'Partially Effective',resL:3,resC:2,owner:'CEO',appetite:'Medium',boardFreq:'Quarterly',escalation:'Formal Irrigators Council submission to Ministerial review; media campaign targeting NRAR decisions.',ciAction:'CEO introductory meeting with Hartley within 30 days; Board to agree stakeholder engagement protocol.',ciOwner:'CEO',ciDate:'2026-06-30',ciStatus:'In Progress',ciOutcome:'Relationship reset meeting completed; stakeholder engagement protocol adopted by Board.',linked:'Strategic Risk Register; Stakeholder Engagement Register',nextReview:'2026-06-30',escalatedTo:''},
-    {id:'SR-08',category:'Strategic | Environmental & Geographic Risk | Catchment Sensitivity & Cultural Risk',title:'Aboriginal Cultural Water & Heritage Risk',desc:"NRAR's compliance and enforcement activities occur on Country where Aboriginal cultural heritage obligations apply.",cause:'Absence of cultural engagement protocols; evolving legal landscape of Aboriginal water rights; insufficient cultural competency in operational teams.',consequence:"Cultural harm to sites and communities; reputational damage; legal challenge to enforcement actions; loss of NRAR's social licence.",inhL:3,inhC:3,controls:'1. NRAR Acknowledgement of Country protocols.
-2. NSW Government Aboriginal cultural heritage obligations apply.
-3. Some staff cultural awareness training (ad hoc).',ctrlOwner:'CEO / Chief Regulatory Officer',ctrlEff:'Partially Effective',resL:2,resC:2,owner:'CEO / Chief Regulatory Officer',appetite:'Low',boardFreq:'Annually',escalation:'Incident involving cultural site or community during NRAR activity; legal challenge referencing cultural obligations.',ciAction:'Develop Aboriginal Cultural Engagement Protocol in consultation with Land Councils within 6 months.',ciOwner:'CEO / CRO',ciDate:'2026-09-30',ciStatus:'Planned',ciOutcome:'Cultural Engagement Protocol adopted and operationalised; staff cultural competency assessment completed.',linked:'Strategic Risk Register; Cultural Heritage Register',nextReview:'2026-09-30',escalatedTo:''},
-    {id:'SR-08A',category:'Strategic | Stakeholder Trust & Confidence | Cultural Engagement Risk',title:'Aboriginal Community Relations — Crown Lands Bill Opposition & Heightened Engagement Risk',desc:"Strong opposition from Aboriginal Land Councils to proposed Crown land reforms (Crown Lands Bill) has heightened community anxiety and distrust of NSW Government agencies. NRAR staff engaging First Nations stakeholders may encounter elevated emotion, pointed questioning, or reputational spillover despite NRAR having no role in the legislation.",cause:'Crown Lands Bill opposition inflaming existing tensions around land rights, cultural authority, and self-determination. Absence of a formal Aboriginal Cultural Engagement Protocol. Field staff engaging communities without updated cultural awareness briefings.',consequence:"Cultural harm or incident during field engagement. Reputational damage to NRAR's Land Council relationships. Loss of community intelligence (a direct compliance capability impact). Media or complaints escalation.",inhL:3,inhC:3,controls:'1. Awareness communication issued to staff re Crown Lands Bill and culturally sensitive engagement guidance.
-2. Acknowledgement of Country protocols in place for formal engagements.
-3. No formal Aboriginal Cultural Engagement Protocol — GAP.
-4. No structured cultural competency training program — GAP.',ctrlOwner:'Director Compliance & Enforcement / People & Culture',ctrlEff:'Partially Effective',resL:3,resC:2,owner:'CEO / Chief Regulatory Officer',appetite:'Low',boardFreq:'Annually (escalate on incident)',escalation:'Incident during field engagement · Formal complaint from Land Council · Media coverage linking NRAR to Crown Lands tensions · Material disruption to compliance operations in First Nations country.',ciAction:'1. Issue targeted operational briefing to all field and engagement staff within 30 days: current Crown Lands context, how to respond, what not to say, who to escalate to.
-2. Accelerate Aboriginal Cultural Engagement Protocol (SR-08) — ensure it covers politically sensitive Government policy contexts.
-3. Monitor community sentiment through intelligence channels; escalate if formal complaint, media attention, or material disruption occurs.',ciOwner:'Dir C&E / P&C',ciDate:'2026-04-30',ciStatus:'In Progress',ciOutcome:'Operational briefing issued and received by all relevant staff · No incidents or formal complaints from First Nations communities · Cultural Engagement Protocol adopted and includes politically sensitive engagement guidance.',linked:'SR-08 (parent risk); SR-06 (Stakeholder Engagement); NR-F (Dark Figure / intelligence loss); Stakeholder Engagement Register; Cultural Heritage Register',nextReview:'2026-06-30',escalatedTo:''},
-  ];
-
-  state.registers = {
-    enterprise: {
-      id:'enterprise', name:'Enterprise Risk Register', code:'ERR',
-      owner:'Chief Regulatory Officer', isEnterprise:true,
-      desc:'Board-level strategic risks. Aligned to RMF Risk Descriptors (Feb 2026) & IRQAF Framework.',
-      parent:'', risks
-    },
-    dg: {
-      id:'dg', name:'Data Governance Risk Register', code:'DG',
-      owner:'Director Data & Analytics', isEnterprise:false,
-      desc:'Operational risks arising from data quality, data management, and information asset governance gaps. Escalates to Enterprise Register (SR-10, SR-01).',
-      parent:'SR-10, SR-01', risks:[]
-    },
-    rim: {
-      id:'rim', name:'Records & Information Management Register', code:'RIM',
-      owner:'Chief Regulatory Officer', isEnterprise:false,
-      desc:"Operational risks arising from records management, retention, disposal, GIPA obligations, and NSW State Records Act compliance.",
-      parent:'SR-05', risks:[]
-    },
-    int: {
-      id:'int', name:'Regulatory Intelligence Risk Register', code:'INT',
-      owner:'Director ISI', isEnterprise:false,
-      desc:"Risks to NRAR's intelligence collection, analysis, and dissemination capability.",
-      parent:'NR-F', risks:[]
-    },
-  };
-}
-
-// ════════════════════════════════════════════════════════════════════════
-// HELPERS
-// ════════════════════════════════════════════════════════════════════════
+</html>
