@@ -16,10 +16,10 @@
   --shadow: 0 2px 12px rgba(13,31,53,0.10); --shadow-lg: 0 8px 32px rgba(13,31,53,0.16);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--dark);min-height:100vh;display:flex;font-size:14px}
+body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--dark);min-height:100vh;display:flex;flex-direction:row;font-size:14px;align-items:flex-start}
 
 /* SIDEBAR */
-#sidebar{width:var(--sidebar);min-height:100vh;background:var(--navy);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;overflow-y:auto}
+#sidebar{width:var(--sidebar);min-height:100vh;background:var(--navy);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0;z-index:100}
 .sidebar-logo{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,0.08)}
 .sidebar-logo .org{font-size:10px;font-weight:700;color:var(--teal-lt);letter-spacing:2px;text-transform:uppercase}
 .sidebar-logo .title{font-size:15px;font-weight:700;color:white;margin-top:3px;line-height:1.3}
@@ -47,7 +47,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--dark);mi
 .version{font-size:9px;color:rgba(255,255,255,0.2);margin-top:4px}
 
 /* MAIN */
-#main{margin-left:var(--sidebar);flex:1;min-height:100vh}
+#main{flex:1;min-height:100vh;overflow-x:hidden}
 .page{display:none;padding:26px 30px}.page.active{display:block}
 
 /* TOAST */
@@ -250,11 +250,6 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
     <div class="sub">Governance Intelligence Platform</div>
   </div>
 
-  <div class="conn-status">
-    <div class="conn-dot offline" id="conn-dot"></div>
-    <span id="conn-label" style="color:rgba(255,255,255,0.4);">Not connected</span>
-  </div>
-
   <div class="nav-section">
     <div class="nav-label">Overview</div>
     <div class="nav-item active" onclick="showPage('board')" data-page="board"><span class="icon">📊</span>Board Summary</div>
@@ -275,17 +270,12 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
     <div class="nav-label">Settings</div>
     <div class="nav-item" onclick="showPage('framework')" data-page="framework"><span class="icon">📖</span>RMF Criteria Guide</div>
     <div class="nav-item" onclick="showPage('changelog')" data-page="changelog"><span class="icon">📝</span>Change Log</div>
-    <div class="nav-item" onclick="openModal('sp-setup-modal')" data-page="_sp"><span class="icon">⚙</span>SharePoint Config</div>
   </div>
 
   <div class="sidebar-bottom">
-    <div class="sp-config-mini">
-      <div style="color:rgba(255,255,255,0.5);margin-bottom:3px;">SharePoint Site URL</div>
-      <input type="text" id="sp-url-mini" placeholder="https://tenant.sharepoint.com/sites/nrar" oninput="saveSPConfig()">
-    </div>
-    <button class="sidebar-btn teal" onclick="syncAll()">🔄 Sync with SharePoint</button>
-    <button class="sidebar-btn gold" onclick="exportJSON()">⬇ Export JSON Backup</button>
-    <div class="version">v3.0 · SharePoint Backend · NRAR · March 2026</div>
+    <button class="sidebar-btn teal" onclick="exportJSON()">⬇ Export JSON Backup</button>
+    <button class="sidebar-btn gold" onclick="document.getElementById('import-file').click()">⬆ Import / Restore</button>
+    <div class="version">v3.1 · localStorage · NRAR · March 2026</div>
   </div>
 </nav>
 
@@ -298,15 +288,9 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
     <div class="page-header-row">
       <div><h1>Board Summary Dashboard</h1><p>Live risk profile · <span id="board-date"></span> · All registers</p></div>
       <div class="flex gap-8">
-        <button class="btn btn-secondary btn-sm" onclick="syncAll()">🔄 Refresh</button>
-        <button class="btn btn-primary btn-sm" onclick="showPage('enterprise')">Full Register →</button>
+<button class="btn btn-primary btn-sm" onclick="showPage('enterprise')">Full Register →</button>
       </div>
     </div>
-  </div>
-
-  <div id="sp-warning" class="alert alert-warning mb-18 hidden">
-    <span>⚠</span>
-    <div>SharePoint not configured. Data is being read from local cache only. <a href="#" onclick="openModal('sp-setup-modal')" style="font-weight:700;">Configure SharePoint →</a></div>
   </div>
 
   <div class="section-title">Inherent Risk Profile</div>
@@ -347,7 +331,6 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
       <div><h1>⚡ ELT Weekly Tactical Agenda</h1><p>Auto-populated from CRITICAL and HIGH residual risks · All registers</p></div>
       <div class="flex gap-8">
         <button class="btn btn-gold btn-sm" onclick="exportAgenda()">📄 Export Agenda</button>
-        <button class="btn btn-secondary btn-sm" onclick="syncAll()">🔄 Refresh</button>
       </div>
     </div>
   </div>
@@ -373,8 +356,7 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
     <div class="page-header-row">
       <div><h1>Enterprise Risk Register</h1><p>Board-level risks · RMF Risk Descriptors (Feb 2026) · Real-time SharePoint sync</p></div>
       <div class="flex gap-8">
-        <button class="btn btn-secondary btn-sm" onclick="syncAll()">🔄 Refresh</button>
-        <button class="btn btn-primary btn-sm" onclick="openAddRisk('enterprise')">+ Add Risk</button>
+<button class="btn btn-primary btn-sm" onclick="openAddRisk('enterprise')">+ Add Risk</button>
       </div>
     </div>
   </div>
@@ -407,8 +389,7 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
     <div class="page-header-row mb-14">
       <div><h2 id="op-reg-title" style="font-size:17px;font-weight:700;color:var(--navy);"></h2><p id="op-reg-sub" class="text-muted"></p></div>
       <div class="flex gap-8">
-        <button class="btn btn-secondary btn-sm" onclick="syncAll()">🔄 Refresh</button>
-        <button class="btn btn-primary btn-sm" onclick="openAddRisk(currentRegister)">+ Add Risk</button>
+<button class="btn btn-primary btn-sm" onclick="openAddRisk(currentRegister)">+ Add Risk</button>
         <button class="btn btn-secondary btn-sm" onclick="hideOpReg()">← Back</button>
       </div>
     </div>
@@ -568,70 +549,6 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
 
 </main>
 
-<!-- ══ SHAREPOINT SETUP MODAL ══ -->
-<div class="modal-overlay" id="sp-setup-modal">
-  <div class="modal" style="max-width:660px;">
-    <div class="modal-header"><h2>⚙ SharePoint Configuration</h2><button class="modal-close" onclick="closeModal('sp-setup-modal')">✕</button></div>
-    <div class="modal-body">
-      <div class="alert alert-info mb-14"><span>ℹ</span><span>This app uses SharePoint Lists as its database. You need to create the lists once, then configure the site URL here. See the Setup Guide document for detailed instructions.</span></div>
-
-      <div class="form-group">
-        <label class="form-label">SharePoint Site URL *</label>
-        <input type="text" class="form-control" id="sp-url-input" placeholder="https://nrarnswgov.sharepoint.com/sites/RiskRegister">
-        <div class="form-hint">The URL of the SharePoint site where you created the NRARRisks, NRARRegisters, NRARCIActions, and NRARChangelog lists.</div>
-      </div>
-
-      <div class="divider"></div>
-      <div class="section-title">Required SharePoint Lists — create these once</div>
-
-      <div class="sp-step">
-        <div class="sp-num">1</div>
-        <div>
-          <h4>NRARRegisters — Register metadata</h4>
-          <p>Columns: <code>Title</code> (text) · <code>RegCode</code> (text) · <code>RegOwner</code> (text) · <code>RegDesc</code> (multi-line text) · <code>ParentERR</code> (text) · <code>IsEnterprise</code> (Yes/No)</p>
-        </div>
-      </div>
-      <div class="sp-step">
-        <div class="sp-num">2</div>
-        <div>
-          <h4>NRARRisks — All risk data</h4>
-          <p>Columns: <code>Title</code> · <code>RiskID</code> · <code>RegisterID</code> · <code>Category</code> · <code>RiskDesc</code> · <code>Cause</code> · <code>Consequence</code> · <code>InhL</code> (number) · <code>InhC</code> (number) · <code>Controls</code> · <code>CtrlOwner</code> · <code>CtrlEff</code> · <code>ResL</code> (number) · <code>ResC</code> (number) · <code>RiskOwner</code> · <code>Appetite</code> · <code>BoardFreq</code> · <code>Escalation</code> · <code>CIAction</code> · <code>CIOwner</code> · <code>CIDate</code> (date/time) · <code>CIStatus</code> · <code>CIOutcome</code> · <code>LinkedRegs</code> · <code>NextReview</code> (date/time) · <code>EscalatedTo</code></p>
-          <p style="margin-top:6px;">All text fields unless noted. Multi-line text for: <code>RiskDesc</code>, <code>Cause</code>, <code>Consequence</code>, <code>Controls</code>, <code>CIAction</code>, <code>CIOutcome</code>, <code>Escalation</code></p>
-        </div>
-      </div>
-      <div class="sp-step">
-        <div class="sp-num">3</div>
-        <div>
-          <h4>NRARCIActions — Standalone CI actions</h4>
-          <p>Columns: <code>Title</code> · <code>RiskID</code> · <code>RegisterName</code> · <code>CIAction</code> · <code>CIOwner</code> · <code>CIDate</code> (date/time) · <code>CIStatus</code> · <code>CIOutcome</code> · <code>PDCAPhase</code></p>
-        </div>
-      </div>
-      <div class="sp-step">
-        <div class="sp-num">4</div>
-        <div>
-          <h4>NRARChangelog — Audit trail</h4>
-          <p>Columns: <code>Title</code> · <code>Action</code> · <code>Details</code> · <code>ChangedBy</code> · <code>ChangeTime</code> (date/time)</p>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-      <div class="alert alert-warning">
-        <span>⚠</span>
-        <div><strong>Permissions:</strong> All users who need to edit risks require <strong>Contribute</strong> permission on the SharePoint site. Read-only users require <strong>Read</strong> permission. The lists are accessible to all users in your Microsoft 365 tenant automatically when opened from SharePoint.</div>
-      </div>
-
-      <div class="form-group mt-14">
-        <button class="btn btn-primary full-width" onclick="testConnection()">🔗 Test Connection</button>
-      </div>
-      <div id="conn-test-result"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('sp-setup-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveSPConfigFull()">Save Configuration</button>
-    </div>
-  </div>
-</div>
-
 <!-- ADD / EDIT RISK MODAL -->
 <div class="modal-overlay" id="risk-modal">
   <div class="modal">
@@ -712,7 +629,7 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('risk-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveRisk()" id="save-risk-btn">Save to SharePoint</button>
+      <button class="btn btn-primary" onclick="saveRisk()" id="save-risk-btn">Save Risk</button>
     </div>
   </div>
 </div>
@@ -730,7 +647,7 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('new-reg-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveNewRegister()">Create in SharePoint</button>
+      <button class="btn btn-primary" onclick="saveNewRegister()">Create Register</button>
     </div>
   </div>
 </div>
@@ -762,7 +679,7 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('ci-modal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveCIAction()">Save to SharePoint</button>
+      <button class="btn btn-primary" onclick="saveCIAction()">Save Action</button>
     </div>
   </div>
 </div>
@@ -861,22 +778,9 @@ let state = {
   lastSync: null
 };
 
-const CACHE_KEY = 'nrar_sp_cache_v3';
 
-function saveCache() {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ registers: state.registers, ciActions: state.ciActions, changelog: state.changelog, standingItems: state.standingItems, spUrl: state.spUrl, lastSync: state.lastSync })); } catch(e) {}
-}
-function loadCache() {
-  try {
-    const d = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
-    if (d.registers) state.registers = d.registers;
-    if (d.ciActions) state.ciActions = d.ciActions;
-    if (d.changelog) state.changelog = d.changelog;
-    if (d.standingItems) state.standingItems = d.standingItems;
-    if (d.spUrl) { state.spUrl = d.spUrl; SP.url = d.spUrl; }
-    if (d.lastSync) state.lastSync = d.lastSync;
-  } catch(e) {}
-}
+
+// localStorage functions now in state layer above
 
 // ════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -910,25 +814,13 @@ function loading(show, msg='Syncing with SharePoint…') {
   document.getElementById('loading-msg').textContent = msg;
 }
 
-function setConnStatus(status) {
-  const dot = document.getElementById('conn-dot');
-  const lbl = document.getElementById('conn-label');
-  state.isConnected = status === 'online';
-  dot.className = `conn-dot ${status}`;
-  lbl.textContent = {online:'Connected to SharePoint',offline:'Offline — using local cache',syncing:'Syncing…'}[status];
-  lbl.style.color = {online:'rgba(46,204,113,0.8)',offline:'rgba(231,76,60,0.7)',syncing:'rgba(200,146,10,0.8)'}[status];
-  const warn = document.getElementById('sp-warning');
-  if(warn) warn.classList.toggle('hidden', status==='online');
-}
+function setConnStatus(status) { /* localStorage mode — no connection status */ }
 
 function logChange(action, details) {
   const entry = { time: new Date().toISOString(), action, details, by: 'User' };
   state.changelog.unshift(entry);
   if(state.changelog.length > 300) state.changelog = state.changelog.slice(0,300);
-  // Fire-and-forget to SharePoint
-  if(SP.url) {
-    SP.addItem('NRARChangelog', { Title: action, Action: action, Details: details.substring(0,255), ChangedBy: 'User', ChangeTime: new Date().toISOString() }).catch(()=>{});
-  }
+  saveState();
   renderChangelog();
 }
 
@@ -1014,144 +906,6 @@ function spToRegister(item) {
     isEnterprise: item.IsEnterprise === true,
     risks: []
   };
-}
-
-async function syncAll() {
-  if (!SP.url) { toast('Configure SharePoint URL first', 'warn'); openModal('sp-setup-modal'); return; }
-  setConnStatus('syncing');
-  loading(true, 'Syncing registers from SharePoint…');
-  try {
-    // Fetch registers
-    const regs = await SP.getItems('NRARRegisters');
-    const newRegs = {};
-    regs.forEach(item => {
-      const reg = spToRegister(item);
-      newRegs[reg.id] = { ...reg, risks: [] };
-    });
-
-    // Ensure enterprise register exists in SP
-    if (!regs.find(r => r.IsEnterprise)) {
-      toast('Enterprise register not found in SharePoint. Seeding initial data…', 'warn');
-      await seedEnterpriseRegister();
-      return syncAll();
-    }
-
-    // Fetch all risks
-    loading(true, 'Loading risks from SharePoint…');
-    const risks = await SP.getItems('NRARRisks');
-    risks.forEach(item => {
-      const r = spToRisk(item);
-      const reg = newRegs[r.registerId];
-      if (reg) reg.risks.push(r);
-    });
-
-    state.registers = newRegs;
-    state.lastSync = new Date().toISOString();
-
-    // Fetch standalone CI actions
-    loading(true, 'Loading CI actions…');
-    const ci = await SP.getItems('NRARCIActions');
-    state.ciActions = ci.map(item => ({
-      spId: item.ID,
-      riskId: item.RiskID || '',
-      registerName: item.RegisterName || '',
-      action: item.CIAction || '',
-      owner: item.CIOwner || '',
-      date: item.CIDate ? item.CIDate.split('T')[0] : '',
-      status: item.CIStatus || 'Planned',
-      outcome: item.CIOutcome || '',
-      pdca: item.PDCAPhase || 'Plan'
-    }));
-
-    // Fetch changelog (last 100 entries)
-    const log = await SP.getItems('NRARChangelog', '', 'ID,Title,Action,Details,ChangedBy,ChangeTime');
-    state.changelog = log.slice(0,100).map(l => ({ time: l.ChangeTime||new Date().toISOString(), action: l.Action||l.Title, details: l.Details||'', by: l.ChangedBy||'Unknown' }));
-
-    setConnStatus('online');
-    saveCache();
-    renderAll();
-    toast(`Synced ${risks.length} risks from SharePoint`, 'success');
-  } catch (err) {
-    setConnStatus('offline');
-    toast(`SharePoint sync failed: ${err.message}. Using local cache.`, 'error', 6000);
-    console.error('SP sync error:', err);
-  } finally {
-    loading(false);
-  }
-}
-
-async function seedEnterpriseRegister() {
-  // Create Enterprise Register entry in NRARRegisters
-  await SP.addItem('NRARRegisters', {
-    Title: 'Enterprise Risk Register',
-    RegCode: 'ERR',
-    RegOwner: 'Chief Regulatory Officer',
-    RegDesc: 'Board-level strategic risks. Aligned to RMF Risk Descriptors (Feb 2026) & IRQAF Framework.',
-    ParentERR: '',
-    IsEnterprise: true
-  });
-  // Seed initial operational registers
-  for (const reg of [
-    { Title:'Data Governance Risk Register', RegCode:'DG', RegOwner:'Director Data & Analytics', RegDesc:'Operational risks arising from data quality, data management, and information asset governance gaps.', ParentERR:'SR-10, SR-01', IsEnterprise:false },
-    { Title:'Records & Information Management Register', RegCode:'RIM', RegOwner:'Chief Regulatory Officer', RegDesc:'Operational risks arising from records management, retention, disposal, GIPA obligations, and NSW State Records Act compliance.', ParentERR:'SR-05', IsEnterprise:false },
-    { Title:'Regulatory Intelligence Risk Register', RegCode:'INT', RegOwner:'Director ISI', RegDesc:'Risks to NRAR\'s intelligence collection, analysis, and dissemination capability.', ParentERR:'NR-F', IsEnterprise:false },
-  ]) {
-    await SP.addItem('NRARRegisters', reg);
-  }
-  toast('Initial registers created in SharePoint. Seeding enterprise risks…', 'info');
-  // Seed enterprise risks from initial data
-  await seedInitialRisks();
-}
-
-const INITIAL_RISKS = [
-  {id:'SR-05',cat:'Strategic | Accountability & Assurance | Governance & Decision-Making',title:'NSW Audit Office Findings — Data, Risk, Governance, Decision-Making',desc:'NSW Audit Office preliminary findings indicate material deficiencies in data quality, risk governance, and decision-making documentation. The window for getting ahead of findings is narrow and closing.',cause:'Systemic data quality gaps; absent IRQAF; inconsistent decision-making documentation; QMS methodology misalignment with external accountability standards.',cons:'Published adverse report; challenge to regulatory decisions; funding risk at next Budget; weakened position in independence review and IGWC assessments; legal exposure on enforcement decisions.',il:5,ic:4,ctrl:'1. Internal QMS audit program.\n2. Audit Office engagement process underway.\n3. IRQAF draft under development.\n4. Peloton data management project commenced.',ctrlOwner:'CEO / Chief Regulatory Officer',ctrlEff:'Ineffective',rl:4,rc:3,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Every Board meeting',esc:'Final Audit Office report publication; any Ministerial or parliamentary inquiry referencing findings.',ciAction:'Board to direct management to prepare remediation plan within 30 days; adopt IRQAF immediately; seek legal advice on decision-making documentation exposure.',ciOwner:'CEO / CRO',ciDate:'2026-04-30',ciStatus:'In Progress',ciOutcome:'All Audit Office findings closed; no repeat findings in next review cycle.',linked:'Strategic Risk Register; Audit Findings Register',nextReview:'2026-04-30'},
-  {id:'SR-10',cat:'Strategic | Regulatory Effectiveness | Information & Data',title:'WaterNSW — Unreliable Data & Operating Licence Non-Conformance',desc:'NRAR\'s regulatory functions are structurally dependent on WaterNSW data it does not generate or control, with no formal data sharing agreement in place.',cause:'Absent formal data sharing agreement; no DAS outage notification protocol; no evidentiary certification standard.',cons:'Undetected non-compliance during telemetry gaps; failed or weakened prosecutions; legally challenged enforcement decisions.',il:5,ic:4,ctrl:'1. Informal staff-level relationships with WaterNSW data teams.\n2. Ad hoc requests for DAS data.\n3. NRAR internal data quality processes (identify symptoms only).\n4. No formal data sharing agreement — NO EFFECTIVE CONTROL.',ctrlOwner:'Chief Regulatory Officer / Director Data & Analytics',ctrlEff:'Ineffective',rl:4,rc:3,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Every Board meeting',esc:'Failed prosecution attributable to WaterNSW data failure; WaterNSW refusal to negotiate data sharing agreement within 60 days.',ciAction:'Negotiate formal data sharing agreement with WaterNSW within 90 days; establish WaterNSW operating licence conformance monitoring; develop evidentiary data certification protocol.',ciOwner:'CRO / CEO',ciDate:'2026-06-30',ciStatus:'In Progress',ciOutcome:'Data sharing agreement executed; evidentiary certification protocol adopted.',linked:'Strategic Risk Register; Data Management Problem Statement',nextReview:'2026-04-30'},
-  {id:'NR-B',cat:'Strategic | Legal & Regulatory Integrity Risk | Governance & Decision-Making',title:'Legal Challenge / Judicial Review — Enforcement Decision Precedent Risk',desc:'A successful judicial review of an NRAR enforcement decision on procedural defect grounds creates precedent that can be used to challenge a class of NRAR\'s decisions.',cause:'Inadequate decision-making documentation; reliance on data with uncertain provenance; inconsistent enforcement criteria application; absence of IRQAF.',cons:'Precedent that invalidates a class of NRAR enforcement decisions; obligation to reopen closed cases; legal costs; enforcement paralysis; loss of deterrence effect.',il:5,ic:4,ctrl:'1. NRAR legal team review of enforcement decisions (inconsistent).\n2. Investigation procedures (not fully documented or applied uniformly).\n3. Delegations register (maintained).\n4. No systematic decision documentation standard — GAP.',ctrlOwner:'Chief Regulatory Officer / General Counsel',ctrlEff:'Ineffective',rl:4,rc:4,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Every Board meeting',esc:'Any judicial review application filed against NRAR; Audit Office finding on decision-making documentation.',ciAction:'1. Implement mandatory decision documentation standard within 60 days.\n2. Legal review of current enforcement pipeline within 30 days.\n3. Develop evidentiary data certification protocol with ODPP.',ciOwner:'CRO / General Counsel',ciDate:'2026-06-30',ciStatus:'In Progress',ciOutcome:'Decision documentation standard implemented; zero successful judicial reviews on procedural grounds.',linked:'Enterprise Risk Register; Legal Matters Register; Enforcement Procedures',nextReview:'2026-04-30'},
-  {id:'NR-F',cat:'Strategic | Regulatory Effectiveness | Regulated Entity Behaviour & Capability Risk',title:'Dark Figure — Cumulative Undetected Non-Compliance at Scale',desc:'NRAR cannot know how much non-compliance it is not detecting, given structural gaps in telemetry coverage, metering accuracy, external data reliability, and intelligence capability.',cause:'Structural metering and telemetry coverage gaps; incomplete DAS coverage; intelligence function absent; priority programs based on visible rather than risk-ranked non-compliance; no dark figure estimation methodology.',cons:'Valley-scale SDL non-compliance; irreversible environmental harm in sensitive catchments; retrospective finding that NRAR\'s compliance program was structurally inadequate.',il:5,ic:4,ctrl:'1. Annual compliance priority program.\n2. Telemetry monitoring of metered population (incomplete).\n3. Community tip-off program.\n4. No dark figure estimation — GAP.',ctrlOwner:'Chief Regulatory Officer / Director Data & Analytics',ctrlEff:'Ineffective',rl:4,rc:4,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Quarterly',esc:'Independent hydrological assessment suggesting valley-scale over-extraction inconsistent with NRAR compliance record.',ciAction:'1. Develop dark figure estimation methodology using independent hydrological analysis — within 12 months.\n2. Build regulated population risk profile covering all active NSW licence holders.',ciOwner:'CRO / Director D&A',ciDate:'2027-03-31',ciStatus:'Planned',ciOutcome:'Dark figure estimation methodology adopted; regulated population risk profile operational.',linked:'Regulatory Risk Profile; Intelligence Framework Register',nextReview:'2026-06-30'},
-  {id:'SR-01',cat:'Strategic | Regulatory Effectiveness | Governance & Decision-Making',title:'Regulatory Effectiveness — Process Quality, Decision-Making & Data Management',desc:'Enterprise-wide risk that NRAR\'s regulatory effectiveness is structurally undermined by inconsistent process quality, absent evidence framework, and unreliable data environment.',cause:'Absence of IRQAF; no enterprise data strategy; no named data stewards; siloed operations.',cons:'Legal vulnerability in enforcement decisions; inability to demonstrate risk-based regulation to IGWC; Strategic Plan delivery at risk by 1 July 2026.',il:4,ic:4,ctrl:'1. IRQAF framework (draft under development).\n2. Peloton data management project underway.\n3. QMS internal audit program in place.\n4. RegWorks case management system operational.',ctrlOwner:'Chief Regulatory Officer / Director Data & Analytics',ctrlEff:'Ineffective',rl:4,rc:3,owner:'Chief Regulatory Officer',appetite:'Low',boardFreq:'Quarterly',esc:'Audit Office final report published; IGWC inquiry referencing data/process adequacy; Strategic Plan go-live deadline missed.',ciAction:'Adopt IRQAF; complete Peloton data audit; reconcile QMS vs Audit Office findings; rebuild KPI framework on quality-assured data.',ciOwner:'CRO / Director D&A',ciDate:'2026-06-30',ciStatus:'In Progress',ciOutcome:'IRQAF adopted by Board; Peloton Phase 1 complete; zero Audit Office findings outstanding.',linked:'Enterprise Risk Register; Audit Office Findings Register; Peloton Project Register',nextReview:'2026-06-30'},
-  {id:'IR-01',cat:'Strategic | Water Market & Industry | Regulated Entity Behaviour & Capability Risk',title:'Iran Conflict — Economic Shock & Elevated Irrigator Non-Compliance Risk',desc:'Escalating conflict in Iran is generating a significant global economic shock with direct transmission to Australian irrigators through oil prices, diesel costs, fertiliser prices, and trade disruption.',cause:'Geopolitical disruption → oil/diesel/fertiliser price inflation → irrigator margin compression → non-compliance incentive shift → NRAR intelligence gap fails to detect.',cons:'Elevated non-compliance rates across multiple high-volume sectors simultaneously; SDL breach risk at valley scale; IGWC scrutiny of priority program adequacy.',il:4,ic:4,ctrl:'1. Annual compliance priority program.\n2. Telemetry and DAS monitoring (with known gaps).\n3. Metering compliance requirements.\n4. No economic stress indicator monitoring — GAP.',ctrlOwner:'Chief Regulatory Officer / Director Compliance & Enforcement',ctrlEff:'Ineffective',rl:4,rc:3,owner:'Chief Regulatory Officer',appetite:'Low',boardFreq:'Quarterly',esc:'Diesel price sustained above $2.50/L nationally; cluster of metering non-compliance detections.',ciAction:'Adjust 2026 priority programs to reflect financially stressed sectors; commission economic stress intelligence scan within 30 days.',ciOwner:'CRO / Director C&E',ciDate:'2026-04-30',ciStatus:'In Progress',ciOutcome:'Priority program adjustment documented and IGWC-notified; economic stress scan completed.',linked:'Regulatory Risk Profile; Priority Program Register',nextReview:'2026-06-30'},
-  {id:'SR-02',cat:'Strategic | Governance & Decision-Making | Integrity & Independence',title:'Regulatory Independence — Ministerial Review (~6 months)',desc:'The Minister will undertake a review of NRAR\'s independence settings within approximately six months.',cause:'Scheduled Ministerial review; unresolved governance gaps; potential stakeholder lobbying; Audit Office findings outstanding.',cons:'Constraints on NRAR\'s operating independence; changes to governance model or mandate.',il:3,ic:4,ctrl:'1. Board oversight of strategic governance improvement program.\n2. CEO Ministerial relationship management.\n3. NRAR Strategic Plan 2026 articulates independence principles.',ctrlOwner:'Chair / CEO',ctrlEff:'Partially Effective',rl:2,rc:3,owner:'Board',appetite:'Low',boardFreq:'Every Board meeting',esc:'Any indication Minister considering structural changes to NRAR\'s independence settings.',ciAction:'Develop Board-endorsed independence review preparation plan; resolve Audit Office findings before review.',ciOwner:'CEO / Chair',ciDate:'2026-09-30',ciStatus:'Planned',ciOutcome:'Independence review concluded with no reduction in NRAR\'s operating independence.',linked:'Strategic Risk Register; Board Governance Register',nextReview:'2026-06-30'},
-  {id:'SR-03',cat:'Strategic | Strategic Financial Sustainability Risk',title:'Funding Adequacy — Long-Term Financial Resilience',desc:'NRAR\'s ability to deliver its regulatory mandate over the medium term is contingent on maintaining adequate and appropriately structured funding.',cause:'NSW fiscal constraint; efficiency dividend pressure; absence of Outcomes Measures Framework; potential unfunded function expansion.',cons:'Reduced regulatory capacity; hollowing out of existing capability; inability to deliver Strategic Plan.',il:3,ic:4,ctrl:'1. Annual Budget submission process.\n2. CEO Treasury and Ministerial relationship management.\n3. NRAR cost-recovery levy framework.',ctrlOwner:'CEO / CFO',ctrlEff:'Partially Effective',rl:3,rc:3,owner:'Chief Regulatory Officer',appetite:'Low',boardFreq:'Bi-annually',esc:'Budget submission; efficiency dividend announcement; function transfer proposal without confirmed funding.',ciAction:'Deliver Outcomes Measures Framework before next Budget cycle; adopt Board policy that no function acquisition proceeds without confirmed ongoing funding.',ciOwner:'CEO / CFO',ciDate:'2026-12-31',ciStatus:'Planned',ciOutcome:'Outcomes Framework operational; Board funding policy adopted.',linked:'Strategic Risk Register; Budget Planning Register',nextReview:'2026-09-30'},
-];
-
-async function seedInitialRisks() {
-  // Find the enterprise register ID
-  const regs = await SP.getItems('NRARRegisters', "IsEnterprise eq 1");
-  const errSpId = regs[0]?.ID;
-  const errCode = regs[0]?.RegCode || 'ERR';
-  const errId = errCode.toLowerCase();
-
-  for (const r of INITIAL_RISKS) {
-    await SP.addItem('NRARRisks', {
-      Title: r.title,
-      RiskID: r.id,
-      RegisterID: errId,
-      Category: r.cat,
-      RiskDesc: r.desc,
-      Cause: r.cause,
-      Consequence: r.cons,
-      InhL: r.il,
-      InhC: r.ic,
-      Controls: r.ctrl,
-      CtrlOwner: r.ctrlOwner,
-      CtrlEff: r.ctrlEff,
-      ResL: r.rl,
-      ResC: r.rc,
-      RiskOwner: r.owner,
-      Appetite: r.appetite,
-      BoardFreq: r.boardFreq,
-      Escalation: r.esc,
-      CIAction: r.ciAction,
-      CIOwner: r.ciOwner,
-      CIDate: r.ciDate,
-      CIStatus: r.ciStatus,
-      CIOutcome: r.ciOutcome,
-      LinkedRegs: r.linked,
-      NextReview: r.nextReview,
-      EscalatedTo: ''
-    });
-  }
-  toast(`Seeded ${INITIAL_RISKS.length} enterprise risks to SharePoint`, 'success');
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -1263,7 +1017,7 @@ function addStandingItem() {
   const t = prompt('Standing agenda item:');
   if(!t) return;
   state.standingItems.push({ id: Date.now(), title: t });
-  saveCache();
+  saveState();
   renderStandingItems();
 }
 function renderStandingItems() {
@@ -1275,7 +1029,7 @@ function renderStandingItems() {
       <button class="btn btn-danger btn-sm" onclick="removeStanding(${it.id})">✕</button>
     </div>`).join('') : '<p class="text-muted" style="text-align:center;padding:20px;">No standing items. Click "+ Standing Item" to add one.</p>';
 }
-function removeStanding(id) { state.standingItems=state.standingItems.filter(i=>i.id!==id); saveCache(); renderStandingItems(); }
+function removeStanding(id) { state.standingItems=state.standingItems.filter(i=>i.id!==id); saveState(); renderStandingItems(); }
 
 function exportAgenda() {
   const d=document.getElementById('elt-date').value, ch=document.getElementById('elt-chair').value;
@@ -1327,7 +1081,7 @@ function renderEnterpriseTable() {
         <button class="btn btn-danger btn-sm" onclick="deleteRisk('${r.id}','${errId}')">🗑</button>
       </div></td>
     </tr>`;
-  }).join('') || `<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--muted);">No risks match filter. ${SP.url?'':'<a href="#" onclick="openModal(\'sp-setup-modal\')">Configure SharePoint to load data.</a>'}</td></tr>`;
+  }).join('') || `<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--muted);">No risks match filter.</td></tr>`;
 }
 
 function renderRegCards() {
@@ -1453,7 +1207,7 @@ function calcModalScores() {
   if(rl&&rc){const s=score(rl,rc);document.getElementById('m-res-score').textContent=s;document.getElementById('m-res-rat').innerHTML=ratBadge(rating(s));}
 }
 
-async function saveRisk() {
+function saveRisk() {
   const f = id => document.getElementById(id)?.value||'';
   const id = f('r-id').trim(), title = f('r-title').trim();
   if(!id||!title){toast('Risk ID and Title are required','error');return;}
@@ -1473,81 +1227,46 @@ async function saveRisk() {
   const reg = state.registers[editingRegId];
   if(!reg) return;
 
-  document.getElementById('save-risk-btn').textContent = '⏳ Saving…';
-  document.getElementById('save-risk-btn').disabled = true;
-
-  try {
-    if (editingRisk && SP.url) {
-      // Update existing in SharePoint
-      await SP.updateItem('NRARRisks', editingRisk.spId, riskToSP(risk, editingRegId));
-      const idx = reg.risks.findIndex(r=>r.id===editingRisk.id);
-      if(idx>=0) reg.risks[idx] = { ...risk, spId: editingRisk.spId };
-      logChange('Updated risk', `${id} in ${reg.name}`);
-      toast(`${id} updated in SharePoint`, 'success');
-    } else if (editingRisk) {
-      // Offline update
-      const idx = reg.risks.findIndex(r=>r.id===editingRisk.id);
-      if(idx>=0) reg.risks[idx] = risk;
-      logChange('Updated risk (offline)', `${id} in ${reg.name}`);
-      toast(`${id} updated locally (offline)`, 'warn');
-    } else if (SP.url) {
-      // New risk to SharePoint
-      if(reg.risks.find(r=>r.id===id)){toast(`Risk ID "${id}" already exists in this register`,'error');return;}
-      const created = await SP.addItem('NRARRisks', riskToSP(risk, editingRegId));
-      reg.risks.push({ ...risk, spId: created.ID });
-      logChange('Added risk', `${id} — ${title} to ${reg.name}`);
-      toast(`${id} saved to SharePoint`, 'success');
-    } else {
-      // Offline new
-      if(reg.risks.find(r=>r.id===id)){toast(`Risk ID "${id}" already exists`,'error');return;}
-      reg.risks.push(risk);
-      logChange('Added risk (offline)', `${id} to ${reg.name}`);
-      toast(`${id} saved locally (offline — configure SharePoint to sync)`, 'warn');
-    }
-    saveCache();
-    renderAll();
-    closeModal('risk-modal');
-  } catch(err) {
-    toast(`Save failed: ${err.message}`, 'error', 6000);
-  } finally {
-    document.getElementById('save-risk-btn').textContent = 'Save to SharePoint';
-    document.getElementById('save-risk-btn').disabled = false;
+  if (editingRisk) {
+    const idx = reg.risks.findIndex(r=>r.id===editingRisk.id);
+    if(idx>=0) reg.risks[idx] = risk;
+    logChange('Updated risk', `${id} in ${reg.name}`);
+    toast(`${id} updated`, 'success');
+  } else {
+    if(reg.risks.find(r=>r.id===id)){toast(`Risk ID "${id}" already exists in this register`,'error');return;}
+    reg.risks.push(risk);
+    logChange('Added risk', `${id} — ${title} to ${reg.name}`);
+    toast(`${id} saved`, 'success');
   }
+  saveState();
+  renderAll();
+  closeModal('risk-modal');
 }
 
-async function deleteRisk(riskId, regId) {
+function deleteRisk(riskId, regId) {
   if(!confirm(`Delete risk ${riskId}? This cannot be undone.`)) return;
   const reg = state.registers[regId];
   const risk = reg?.risks?.find(r=>r.id===riskId);
-  try {
-    if(risk?.spId && SP.url) await SP.deleteItem('NRARRisks', risk.spId);
-    reg.risks = reg.risks.filter(r=>r.id!==riskId);
-    logChange('Deleted risk', `${riskId} from ${reg.name}`);
-    saveCache(); renderAll();
-    if(currentRegister===regId) renderOpTable();
-    toast(`${riskId} deleted`, 'success');
-  } catch(err) { toast(`Delete failed: ${err.message}`,'error'); }
+  reg.risks = reg.risks.filter(r=>r.id!==riskId);
+  logChange('Deleted risk', `${riskId} from ${reg.name}`);
+  saveState(); renderAll();
+  if(currentRegister===regId) renderOpTable();
+  toast(`${riskId} deleted`, 'success');
 }
 
 // ════════════════════════════════════════════════════════════════════════
 // NEW REGISTER
 // ════════════════════════════════════════════════════════════════════════
-async function saveNewRegister() {
+function saveNewRegister() {
   const name=document.getElementById('nr-name').value.trim();
   const code=document.getElementById('nr-code').value.trim().toUpperCase();
   if(!name||!code){toast('Name and code required','error');return;}
   const id=code.toLowerCase()+'-'+Date.now();
   const reg={id,name,code,owner:document.getElementById('nr-owner').value,desc:document.getElementById('nr-desc').value,parent:document.getElementById('nr-parent').value,isEnterprise:false,risks:[]};
-  try {
-    if(SP.url){
-      const created=await SP.addItem('NRARRegisters',{Title:name,RegCode:code,RegOwner:reg.owner,RegDesc:reg.desc,ParentERR:reg.parent,IsEnterprise:false});
-      reg.spId=created.ID;
-    }
-    state.registers[id]=reg;
-    logChange('Created register',name); saveCache(); renderRegCards();
-    closeModal('new-reg-modal');
-    toast(`Register "${name}" created`, 'success');
-  } catch(err){toast(`Create failed: ${err.message}`,'error');}
+  state.registers[id]=reg;
+  logChange('Created register',name); saveState(); renderRegCards();
+  closeModal('new-reg-modal');
+  toast(`Register "${name}" created`, 'success');
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -1653,7 +1372,7 @@ const wSteps = [
       </div></div>
       <div>
         <div class="card"><div class="card-header"><h3>Recommended Actions</h3></div><div class="card-body">${resGuidance(wData.rl,wData.rc,wData.ctrlEff)}</div></div>
-        <div class="alert alert-success mt-12"><span>✅</span><span>Click "Save to SharePoint" to add this risk to the selected register.</span></div>
+        <div class="alert alert-success mt-12"><span>✅</span><span>Click "Save to Register" to add this risk to the selected register.</span></div>
       </div>
     </div>`;
   }}
@@ -1699,7 +1418,7 @@ function renderWizard(){
     </div>`).join('');
   document.getElementById('wizard-body').innerHTML=wSteps[wStep-1].render();
   document.getElementById('wiz-back').style.display=wStep>1?'':'none';
-  document.getElementById('wiz-next').textContent=wStep===wSteps.length?'Save to SharePoint':'Continue →';
+  document.getElementById('wiz-next').textContent=wStep===wSteps.length?'Save to Register':'Continue →';
 }
 
 function wizNext(){
@@ -1709,7 +1428,7 @@ function wizNext(){
 }
 function wizBack(){ captureWStep(); wStep=Math.max(1,wStep-1); renderWizard(); }
 
-async function saveWizardRisk(){
+function saveWizardRisk(){
   if(!wData.title){toast('Risk title required','error');wStep=1;renderWizard();return;}
   const regId=wData.register||Object.keys(state.registers).find(k=>state.registers[k].isEnterprise)||'enterprise';
   const reg=state.registers[regId];
@@ -1722,18 +1441,12 @@ async function saveWizardRisk(){
     escalation:wData.escalation||'', ciAction:wData.ciAction||'', ciOwner:wData.ciOwner||'', ciDate:wData.ciDate||'', ciStatus:wData.ciStatus||'Planned',
     ciOutcome:wData.ciOutcome||'', linked:wData.linked||'', nextReview:wData.nextReview||'', escalatedTo:''
   };
-  try {
-    if(SP.url){
-      const created=await SP.addItem('NRARRisks',riskToSP(risk,regId));
-      risk.spId=created.ID;
-    }
-    if(!reg.risks)reg.risks=[];
-    reg.risks.push(risk);
-    logChange('Wizard: Added risk',`${risk.id} to ${reg.name}`);
-    saveCache(); renderAll();
-    wStep=1; wData={}; renderWizard();
-    toast(`Risk "${risk.title}" saved to ${reg.name}`,'success');
-  } catch(err){toast(`Save failed: ${err.message}`,'error');}
+  if(!reg.risks)reg.risks=[];
+  reg.risks.push(risk);
+  logChange('Wizard: Added risk',`${risk.id} to ${reg.name}`);
+  saveState(); renderAll();
+  wStep=1; wData={}; renderWizard();
+  toast(`Risk "${risk.title}" saved to ${reg.name}`,'success');
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -1771,20 +1484,14 @@ function renderCITable(){
   </tr>`).join('')||`<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted);">No CI actions match filter.</td></tr>`;
 }
 
-async function saveCIAction(){
+function saveCIAction(){
   const g=id=>document.getElementById(id)?.value||'';
   const action={riskId:g('ci-risk-id'),registerName:state.registers[g('ci-reg-select')]?.name||'',action:g('ci-action-txt'),owner:g('ci-owner-in'),date:g('ci-date-in'),status:g('ci-status-in'),outcome:g('ci-outcome-in'),pdca:g('ci-pdca-in'),id:Date.now()};
   if(!action.action){toast('CI Action text required','error');return;}
-  try {
-    if(SP.url){
-      const created=await SP.addItem('NRARCIActions',{Title:action.action.substring(0,255),RiskID:action.riskId,RegisterName:action.registerName.substring(0,255),CIAction:action.action,CIOwner:action.owner,CIDate:action.date||null,CIStatus:action.status,CIOutcome:action.outcome,PDCAPhase:action.pdca});
-      action.spId=created.ID;
-    }
-    state.ciActions.push(action);
-    logChange('Added CI action',action.action.substring(0,80));
-    saveCache(); renderCITable(); closeModal('ci-modal');
-    toast('CI action saved','success');
-  } catch(err){toast(`Save failed: ${err.message}`,'error');}
+  state.ciActions.push(action);
+  logChange('Added CI action',action.action.substring(0,80));
+  saveState(); renderCITable(); closeModal('ci-modal');
+  toast('CI action saved','success');
 }
 
 // RCA
@@ -1882,50 +1589,7 @@ function renderChangelog(){
       <div class="change-time">${new Date(e.time).toLocaleString('en-AU')}</div>
     </div>`).join(''):'<div style="text-align:center;padding:40px;color:var(--muted);">No changes recorded yet.</div>';
 }
-function clearLog(){ if(!confirm('Clear local log?')) return; state.changelog=[]; saveCache(); renderChangelog(); }
-
-// ════════════════════════════════════════════════════════════════════════
-// SHAREPOINT CONFIG
-// ════════════════════════════════════════════════════════════════════════
-function saveSPConfig(){
-  const url=(document.getElementById('sp-url-mini')?.value||'').replace(/\/$/,'');
-  state.spUrl=url; SP.url=url; saveCache();
-}
-
-function saveSPConfigFull(){
-  const url=(document.getElementById('sp-url-input')?.value||'').replace(/\/$/,'');
-  state.spUrl=url; SP.url=url;
-  document.getElementById('sp-url-mini').value=url;
-  saveCache(); closeModal('sp-setup-modal');
-  toast('SharePoint URL saved. Click "Sync" to load data.','success');
-}
-
-async function testConnection(){
-  const url=(document.getElementById('sp-url-input')?.value||'').replace(/\/$/,'');
-  if(!url){toast('Enter SharePoint URL first','warn');return;}
-  SP.url=url;
-  const el=document.getElementById('conn-test-result');
-  el.innerHTML=`<div class="alert alert-info mt-12"><span>⏳</span><span>Testing connection…</span></div>`;
-  try {
-    const r=await fetch(`${url}/_api/web/title`,{headers:{'Accept':'application/json;odata=verbose'}});
-    if(r.ok){
-      const d=await r.json();
-      el.innerHTML=`<div class="alert alert-success mt-12"><span>✅</span><span>Connected to SharePoint site: <strong>${d.d.Title}</strong>. Now checking lists…</span></div>`;
-      const lists=['NRARRisks','NRARRegisters','NRARCIActions','NRARChangelog'];
-      const results=await Promise.all(lists.map(l=>SP.listExists(l)));
-      const missing=lists.filter((_,i)=>!results[i]);
-      if(missing.length){
-        el.innerHTML+=`<div class="alert alert-warning mt-8"><span>⚠</span><span>Missing lists: <strong>${missing.join(', ')}</strong>. Please create them using the instructions above before syncing.</span></div>`;
-      } else {
-        el.innerHTML+=`<div class="alert alert-success mt-8"><span>✅</span><span>All required lists found. Click "Save Configuration" and then "Sync with SharePoint".</span></div>`;
-      }
-    } else {
-      el.innerHTML=`<div class="alert alert-critical mt-12"><span>❌</span><span>Connection failed (${r.status}). Check the URL and ensure you have access to this SharePoint site.</span></div>`;
-    }
-  } catch(err){
-    el.innerHTML=`<div class="alert alert-critical mt-12"><span>❌</span><span>Connection error: ${err.message}. You may need to open this file from within SharePoint for authentication to work.</span></div>`;
-  }
-}
+function clearLog(){ if(!confirm('Clear local log?')) return; state.changelog=[]; saveState(); renderChangelog(); }
 
 // ════════════════════════════════════════════════════════════════════════
 // EXPORT / IMPORT
@@ -1944,7 +1608,7 @@ function importJSON(e){
     try {
       const d=JSON.parse(ev.target.result);
       if(confirm('Import will replace local cache. SharePoint data is unaffected. Continue?')){
-        state={...state,...d}; saveCache(); renderAll();
+        state={...state,...d}; saveState(); renderAll();
         toast('Import successful','success');
       }
     } catch{toast('Invalid JSON file','error');}
@@ -2007,41 +1671,136 @@ function renderAll(){
   document.getElementById('board-date').textContent=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
   const d=new Date(); d.setDate(d.getDate()+(1+7-d.getDay())%7||7);
   document.getElementById('elt-date').value=d.toISOString().split('T')[0];
-  if(SP.url) document.getElementById('sp-url-mini').value=SP.url;
+
 }
 
 // ════════════════════════════════════════════════════════════════════════
 // BOOT
 // ════════════════════════════════════════════════════════════════════════
-(async function init(){
-  loadCache();
+(function init(){
+  loadState();
+  // First run — seed initial data
+  if (!Object.keys(state.registers).length) {
+    buildInitialState();
+    saveState();
+    toast('Risk Register loaded with initial NRAR data', 'success');
+  }
   renderAll();
-
-  // Auto-detect SharePoint URL from current page location
-  if(!SP.url && window.location.hostname.includes('sharepoint.com')){
-    const parts=window.location.pathname.split('/');
-    const siteIdx=parts.indexOf('sites');
-    if(siteIdx>=0){
-      SP.url=`${window.location.origin}/sites/${parts[siteIdx+1]}`;
-      state.spUrl=SP.url;
-      document.getElementById('sp-url-mini').value=SP.url;
-      saveCache();
-    }
-  }
-
-  if(SP.url){
-    await syncAll();
-  } else {
-    setConnStatus('offline');
-    // Show setup guidance if no cache
-    if(!Object.keys(state.registers).length){
-      setTimeout(()=>openModal('sp-setup-modal'),800);
-    }
-  }
-
-  // Auto-sync every 5 minutes
-  setInterval(()=>{ if(SP.url && document.visibilityState==='visible') syncAll(); }, 5*60*1000);
 })();
 </script>
 </body>
-</html>
+</html><script>
+// ════════════════════════════════════════════════════════════════════════
+// STATE — localStorage
+// ════════════════════════════════════════════════════════════════════════
+const CACHE_KEY = 'nrar_register_v31';
+
+let state = {
+  registers: {},
+  ciActions: [],
+  changelog: [],
+  standingItems: []
+};
+
+function saveState() {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const d = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+    if (d.registers)     state.registers     = d.registers;
+    if (d.ciActions)     state.ciActions     = d.ciActions;
+    if (d.changelog)     state.changelog     = d.changelog;
+    if (d.standingItems) state.standingItems = d.standingItems;
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// INITIAL RISK DATA
+// ════════════════════════════════════════════════════════════════════════
+function buildInitialState() {
+  const risks = [
+    {id:'SR-05',category:'Strategic | Accountability & Assurance | Governance & Decision-Making',title:'NSW Audit Office Findings — Data, Risk, Governance, Decision-Making',desc:'NSW Audit Office preliminary findings indicate material deficiencies in data quality, risk governance, and decision-making documentation. The window for getting ahead of findings is narrow and closing.',cause:'Systemic data quality gaps; absent IRQAF; inconsistent decision-making documentation; QMS methodology misalignment with external accountability standards.',consequence:'Published adverse report; challenge to regulatory decisions; funding risk at next Budget; weakened position in independence review and IGWC assessments; legal exposure on enforcement decisions.',inhL:5,inhC:4,controls:'1. Internal QMS audit program.
+2. Audit Office engagement process underway.
+3. IRQAF draft under development.
+4. Peloton data management project commenced.',ctrlOwner:'CEO / Chief Regulatory Officer',ctrlEff:'Ineffective',resL:4,resC:3,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Every Board meeting',escalation:'Final Audit Office report publication; any Ministerial or parliamentary inquiry referencing findings.',ciAction:'Board to direct management to prepare remediation plan within 30 days; adopt IRQAF immediately; seek legal advice on decision-making documentation exposure.',ciOwner:'CEO / CRO',ciDate:'2026-04-30',ciStatus:'In Progress',ciOutcome:'All Audit Office findings closed; no repeat findings in next review cycle.',linked:'Strategic Risk Register; Audit Findings Register',nextReview:'2026-04-30',escalatedTo:''},
+    {id:'SR-10',category:'Strategic | Regulatory Effectiveness | Information & Data',title:'WaterNSW — Unreliable Data & Operating Licence Non-Conformance',desc:"NRAR's regulatory functions are structurally dependent on WaterNSW data it does not generate or control, with no formal data sharing agreement in place.",cause:'Absent formal data sharing agreement; no DAS outage notification protocol; no evidentiary certification standard.',consequence:'Undetected non-compliance during telemetry gaps; failed or weakened prosecutions; legally challenged enforcement decisions.',inhL:5,inhC:4,controls:'1. Informal staff-level relationships with WaterNSW data teams.
+2. Ad hoc requests for DAS data.
+3. NRAR internal data quality processes (identify symptoms only).
+4. No formal data sharing agreement — NO EFFECTIVE CONTROL.',ctrlOwner:'Chief Regulatory Officer / Director Data & Analytics',ctrlEff:'Ineffective',resL:4,resC:3,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Every Board meeting',escalation:'Failed prosecution attributable to WaterNSW data failure; WaterNSW refusal to negotiate data sharing agreement within 60 days.',ciAction:'Negotiate formal data sharing agreement with WaterNSW within 90 days; establish WaterNSW operating licence conformance monitoring; develop evidentiary data certification protocol.',ciOwner:'CRO / CEO',ciDate:'2026-06-30',ciStatus:'In Progress',ciOutcome:'Data sharing agreement executed; evidentiary certification protocol adopted.',linked:'Strategic Risk Register; Data Management Problem Statement',nextReview:'2026-04-30',escalatedTo:''},
+    {id:'NR-B',category:'Strategic | Legal & Regulatory Integrity Risk | Governance & Decision-Making',title:'Legal Challenge / Judicial Review — Enforcement Decision Precedent Risk',desc:"A successful judicial review of an NRAR enforcement decision on procedural defect grounds creates precedent that can be used to challenge a class of NRAR's decisions.",cause:'Inadequate decision-making documentation; reliance on data with uncertain provenance; inconsistent enforcement criteria application; absence of IRQAF.',consequence:'Precedent that invalidates a class of NRAR enforcement decisions; obligation to reopen closed cases; legal costs; enforcement paralysis; loss of deterrence effect.',inhL:5,inhC:4,controls:'1. NRAR legal team review of enforcement decisions (inconsistent).
+2. Investigation procedures (not fully documented or applied uniformly).
+3. Delegations register (maintained).
+4. No systematic decision documentation standard — GAP.',ctrlOwner:'Chief Regulatory Officer / General Counsel',ctrlEff:'Ineffective',resL:4,resC:4,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Every Board meeting',escalation:'Any judicial review application filed against NRAR; Audit Office finding on decision-making documentation.',ciAction:'1. Implement mandatory decision documentation standard within 60 days.
+2. Legal review of current enforcement pipeline within 30 days.
+3. Develop evidentiary data certification protocol with ODPP.',ciOwner:'CRO / General Counsel',ciDate:'2026-06-30',ciStatus:'In Progress',ciOutcome:'Decision documentation standard implemented; zero successful judicial reviews on procedural grounds.',linked:'Enterprise Risk Register; Legal Matters Register; Enforcement Procedures',nextReview:'2026-04-30',escalatedTo:''},
+    {id:'NR-F',category:'Strategic | Regulatory Effectiveness | Regulated Entity Behaviour & Capability Risk',title:'Dark Figure — Cumulative Undetected Non-Compliance at Scale',desc:"NRAR cannot know how much non-compliance it is not detecting, given structural gaps in telemetry coverage, metering accuracy, external data reliability, and intelligence capability.",cause:'Structural metering and telemetry coverage gaps; incomplete DAS coverage; intelligence function absent; priority programs based on visible rather than risk-ranked non-compliance; no dark figure estimation methodology.',consequence:'Valley-scale SDL non-compliance; irreversible environmental harm in sensitive catchments; retrospective finding that NRAR's compliance program was structurally inadequate.',inhL:5,inhC:4,controls:'1. Annual compliance priority program.
+2. Telemetry monitoring of metered population (incomplete).
+3. Community tip-off program.
+4. No dark figure estimation — GAP.',ctrlOwner:'Chief Regulatory Officer / Director Data & Analytics',ctrlEff:'Ineffective',resL:4,resC:4,owner:'Chief Regulatory Officer',appetite:'Zero tolerance',boardFreq:'Quarterly',escalation:'Independent hydrological assessment suggesting valley-scale over-extraction inconsistent with NRAR compliance record.',ciAction:'1. Develop dark figure estimation methodology using independent hydrological analysis — within 12 months.
+2. Build regulated population risk profile covering all active NSW licence holders.',ciOwner:'CRO / Director D&A',ciDate:'2027-03-31',ciStatus:'Planned',ciOutcome:'Dark figure estimation methodology adopted; regulated population risk profile operational.',linked:'Regulatory Risk Profile; Intelligence Framework Register',nextReview:'2026-06-30',escalatedTo:''},
+    {id:'SR-01',category:'Strategic | Regulatory Effectiveness | Governance & Decision-Making',title:'Regulatory Effectiveness — Process Quality, Decision-Making & Data Management',desc:"Enterprise-wide risk that NRAR's regulatory effectiveness is structurally undermined by inconsistent process quality, absent evidence framework, and unreliable data environment.",cause:'Absence of IRQAF; no enterprise data strategy; no named data stewards; siloed operations.',consequence:'Legal vulnerability in enforcement decisions; inability to demonstrate risk-based regulation to IGWC; Strategic Plan delivery at risk by 1 July 2026.',inhL:4,inhC:4,controls:'1. IRQAF framework (draft under development).
+2. Peloton data management project underway.
+3. QMS internal audit program in place.
+4. RegWorks case management system operational.',ctrlOwner:'Chief Regulatory Officer / Director Data & Analytics',ctrlEff:'Ineffective',resL:4,resC:3,owner:'Chief Regulatory Officer',appetite:'Low',boardFreq:'Quarterly',escalation:'Audit Office final report published; IGWC inquiry referencing data/process adequacy; Strategic Plan go-live deadline missed.',ciAction:'Adopt IRQAF; complete Peloton data audit; reconcile QMS vs Audit Office findings; rebuild KPI framework on quality-assured data.',ciOwner:'CRO / Director D&A',ciDate:'2026-06-30',ciStatus:'In Progress',ciOutcome:'IRQAF adopted by Board; Peloton Phase 1 complete; zero Audit Office findings outstanding.',linked:'Enterprise Risk Register; Audit Office Findings Register; Peloton Project Register',nextReview:'2026-06-30',escalatedTo:''},
+    {id:'IR-01',category:'Strategic | Water Market & Industry | Regulated Entity Behaviour & Capability Risk',title:'Iran Conflict — Economic Shock & Elevated Irrigator Non-Compliance Risk',desc:'Escalating conflict in Iran is generating a significant global economic shock with direct transmission to Australian irrigators through oil prices, diesel costs, fertiliser prices, and trade disruption.',cause:'Geopolitical disruption → oil/diesel/fertiliser price inflation → irrigator margin compression → non-compliance incentive shift → NRAR intelligence gap fails to detect.',consequence:'Elevated non-compliance rates across multiple high-volume sectors simultaneously; SDL breach risk at valley scale; IGWC scrutiny of priority program adequacy.',inhL:4,inhC:4,controls:'1. Annual compliance priority program.
+2. Telemetry and DAS monitoring (with known gaps).
+3. Metering compliance requirements.
+4. No economic stress indicator monitoring — GAP.',ctrlOwner:'Chief Regulatory Officer / Director Compliance & Enforcement',ctrlEff:'Ineffective',resL:4,resC:3,owner:'Chief Regulatory Officer',appetite:'Low',boardFreq:'Quarterly',escalation:'Diesel price sustained above $2.50/L nationally; cluster of metering non-compliance detections.',ciAction:'Adjust 2026 priority programs to reflect financially stressed sectors; commission economic stress intelligence scan within 30 days.',ciOwner:'CRO / Director C&E',ciDate:'2026-04-30',ciStatus:'In Progress',ciOutcome:'Priority program adjustment documented and IGWC-notified; economic stress scan completed.',linked:'Regulatory Risk Profile; Priority Program Register',nextReview:'2026-06-30',escalatedTo:''},
+    {id:'NR-A',category:'Operational | Workforce | Capability & Skills Risk',title:'Workforce Capability & Specialist Skill Attrition',desc:"NRAR's regulatory functions require a rare combination of specialist skills that does not exist at scale in NSW and cannot be quickly rebuilt once lost.",cause:'Constrained public sector remuneration; high demand for water specialists; no workforce succession plan; knowledge concentrated in small number of individuals.',consequence:'Weakened enforcement cases; inconsistent regulatory decisions; reduced capacity to conduct complex floodplain harvesting and groundwater investigations.',inhL:4,inhC:4,controls:'1. NSW Public Sector employment framework.
+2. On-the-job training and mentoring (informal).
+3. Recruitment processes operational.
+4. No formal succession plan — GAP.',ctrlOwner:'CEO / People & Culture Lead',ctrlEff:'Ineffective',resL:4,resC:3,owner:'Chief Regulatory Officer',appetite:'Low',boardFreq:'Bi-annually',escalation:'Loss of two or more senior investigators or hydrologists within 12 months.',ciAction:'1. Develop workforce capability and succession plan within 6 months.
+2. Build competency framework for all regulatory roles aligned to AELERT MRIT.',ciOwner:'CEO / People & Culture Lead',ciDate:'2026-09-30',ciStatus:'Planned',ciOutcome:'Workforce succession plan adopted; competency framework operational.',linked:'Enterprise Risk Register; Workforce Planning Register; MRIT Assessment',nextReview:'2026-09-30',escalatedTo:''},
+    {id:'SR-02',category:'Strategic | Governance & Decision-Making | Integrity & Independence',title:'Regulatory Independence — Ministerial Review (~6 months)',desc:"The Minister will undertake a review of NRAR's independence settings within approximately six months.",cause:'Scheduled Ministerial review; unresolved governance gaps; potential stakeholder lobbying; Audit Office findings outstanding.',consequence:"Constraints on NRAR's operating independence; changes to governance model or mandate.",inhL:3,inhC:4,controls:'1. Board oversight of strategic governance improvement program.
+2. CEO Ministerial relationship management.
+3. NRAR Strategic Plan 2026 articulates independence principles.',ctrlOwner:'Chair / CEO',ctrlEff:'Partially Effective',resL:2,resC:3,owner:'Board',appetite:'Low',boardFreq:'Every Board meeting',escalation:"Any indication Minister considering structural changes to NRAR's independence settings.",ciAction:'Develop Board-endorsed independence review preparation plan; resolve Audit Office findings before review.',ciOwner:'CEO / Chair',ciDate:'2026-09-30',ciStatus:'Planned',ciOutcome:"Independence review concluded with no reduction in NRAR's operating independence.",linked:'Strategic Risk Register; Board Governance Register',nextReview:'2026-06-30',escalatedTo:''},
+    {id:'SR-03',category:'Strategic | Strategic Financial Sustainability Risk',title:'Funding Adequacy — Long-Term Financial Resilience',desc:"NRAR's ability to deliver its regulatory mandate over the medium term is contingent on maintaining adequate and appropriately structured funding.",cause:'NSW fiscal constraint; efficiency dividend pressure; absence of Outcomes Measures Framework; potential unfunded function expansion.',consequence:'Reduced regulatory capacity; hollowing out of existing capability; inability to deliver Strategic Plan.',inhL:3,inhC:4,controls:'1. Annual Budget submission process.
+2. CEO Treasury and Ministerial relationship management.
+3. NRAR cost-recovery levy framework.',ctrlOwner:'CEO / CFO',ctrlEff:'Partially Effective',resL:3,resC:3,owner:'Chief Regulatory Officer',appetite:'Low',boardFreq:'Bi-annually',escalation:'Budget submission; efficiency dividend announcement; function transfer proposal without confirmed funding.',ciAction:'Deliver Outcomes Measures Framework before next Budget cycle; adopt Board policy that no function acquisition proceeds without confirmed ongoing funding.',ciOwner:'CEO / CFO',ciDate:'2026-12-31',ciStatus:'Planned',ciOutcome:'Outcomes Framework operational; Board funding policy adopted.',linked:'Strategic Risk Register; Budget Planning Register',nextReview:'2026-09-30',escalatedTo:''},
+    {id:'SR-06',category:'Strategic | Stakeholder Trust & Confidence | Reputation & Public Confidence',title:'Irrigators Council — CEO Transition & Elevated Lobby Dynamics',desc:'Appointment of Madeleine Hartley as CEO of the Irrigators Council represents a material shift in the external stakeholder environment.',cause:'CEO transition; NRAR governance gaps providing legitimate advocacy leverage; Iran economic shock amplifying irrigator financial stress.',consequence:'Escalated public criticism; challenges to enforcement decisions; adverse influence on Ministerial independence review.',inhL:4,inhC:3,controls:'1. CEO stakeholder relationship management program.
+2. NRAR public communications framework.
+3. Enforcement transparency and consistency frameworks (partial).',ctrlOwner:'CEO',ctrlEff:'Partially Effective',resL:3,resC:2,owner:'CEO',appetite:'Medium',boardFreq:'Quarterly',escalation:'Formal Irrigators Council submission to Ministerial review; media campaign targeting NRAR decisions.',ciAction:'CEO introductory meeting with Hartley within 30 days; Board to agree stakeholder engagement protocol.',ciOwner:'CEO',ciDate:'2026-06-30',ciStatus:'In Progress',ciOutcome:'Relationship reset meeting completed; stakeholder engagement protocol adopted by Board.',linked:'Strategic Risk Register; Stakeholder Engagement Register',nextReview:'2026-06-30',escalatedTo:''},
+    {id:'SR-08',category:'Strategic | Environmental & Geographic Risk | Catchment Sensitivity & Cultural Risk',title:'Aboriginal Cultural Water & Heritage Risk',desc:"NRAR's compliance and enforcement activities occur on Country where Aboriginal cultural heritage obligations apply.",cause:'Absence of cultural engagement protocols; evolving legal landscape of Aboriginal water rights; insufficient cultural competency in operational teams.',consequence:"Cultural harm to sites and communities; reputational damage; legal challenge to enforcement actions; loss of NRAR's social licence.",inhL:3,inhC:3,controls:'1. NRAR Acknowledgement of Country protocols.
+2. NSW Government Aboriginal cultural heritage obligations apply.
+3. Some staff cultural awareness training (ad hoc).',ctrlOwner:'CEO / Chief Regulatory Officer',ctrlEff:'Partially Effective',resL:2,resC:2,owner:'CEO / Chief Regulatory Officer',appetite:'Low',boardFreq:'Annually',escalation:'Incident involving cultural site or community during NRAR activity; legal challenge referencing cultural obligations.',ciAction:'Develop Aboriginal Cultural Engagement Protocol in consultation with Land Councils within 6 months.',ciOwner:'CEO / CRO',ciDate:'2026-09-30',ciStatus:'Planned',ciOutcome:'Cultural Engagement Protocol adopted and operationalised; staff cultural competency assessment completed.',linked:'Strategic Risk Register; Cultural Heritage Register',nextReview:'2026-09-30',escalatedTo:''},
+    {id:'SR-08A',category:'Strategic | Stakeholder Trust & Confidence | Cultural Engagement Risk',title:'Aboriginal Community Relations — Crown Lands Bill Opposition & Heightened Engagement Risk',desc:"Strong opposition from Aboriginal Land Councils to proposed Crown land reforms (Crown Lands Bill) has heightened community anxiety and distrust of NSW Government agencies. NRAR staff engaging First Nations stakeholders may encounter elevated emotion, pointed questioning, or reputational spillover despite NRAR having no role in the legislation.",cause:'Crown Lands Bill opposition inflaming existing tensions around land rights, cultural authority, and self-determination. Absence of a formal Aboriginal Cultural Engagement Protocol. Field staff engaging communities without updated cultural awareness briefings.',consequence:"Cultural harm or incident during field engagement. Reputational damage to NRAR's Land Council relationships. Loss of community intelligence (a direct compliance capability impact). Media or complaints escalation.",inhL:3,inhC:3,controls:'1. Awareness communication issued to staff re Crown Lands Bill and culturally sensitive engagement guidance.
+2. Acknowledgement of Country protocols in place for formal engagements.
+3. No formal Aboriginal Cultural Engagement Protocol — GAP.
+4. No structured cultural competency training program — GAP.',ctrlOwner:'Director Compliance & Enforcement / People & Culture',ctrlEff:'Partially Effective',resL:3,resC:2,owner:'CEO / Chief Regulatory Officer',appetite:'Low',boardFreq:'Annually (escalate on incident)',escalation:'Incident during field engagement · Formal complaint from Land Council · Media coverage linking NRAR to Crown Lands tensions · Material disruption to compliance operations in First Nations country.',ciAction:'1. Issue targeted operational briefing to all field and engagement staff within 30 days: current Crown Lands context, how to respond, what not to say, who to escalate to.
+2. Accelerate Aboriginal Cultural Engagement Protocol (SR-08) — ensure it covers politically sensitive Government policy contexts.
+3. Monitor community sentiment through intelligence channels; escalate if formal complaint, media attention, or material disruption occurs.',ciOwner:'Dir C&E / P&C',ciDate:'2026-04-30',ciStatus:'In Progress',ciOutcome:'Operational briefing issued and received by all relevant staff · No incidents or formal complaints from First Nations communities · Cultural Engagement Protocol adopted and includes politically sensitive engagement guidance.',linked:'SR-08 (parent risk); SR-06 (Stakeholder Engagement); NR-F (Dark Figure / intelligence loss); Stakeholder Engagement Register; Cultural Heritage Register',nextReview:'2026-06-30',escalatedTo:''},
+  ];
+
+  state.registers = {
+    enterprise: {
+      id:'enterprise', name:'Enterprise Risk Register', code:'ERR',
+      owner:'Chief Regulatory Officer', isEnterprise:true,
+      desc:'Board-level strategic risks. Aligned to RMF Risk Descriptors (Feb 2026) & IRQAF Framework.',
+      parent:'', risks
+    },
+    dg: {
+      id:'dg', name:'Data Governance Risk Register', code:'DG',
+      owner:'Director Data & Analytics', isEnterprise:false,
+      desc:'Operational risks arising from data quality, data management, and information asset governance gaps. Escalates to Enterprise Register (SR-10, SR-01).',
+      parent:'SR-10, SR-01', risks:[]
+    },
+    rim: {
+      id:'rim', name:'Records & Information Management Register', code:'RIM',
+      owner:'Chief Regulatory Officer', isEnterprise:false,
+      desc:"Operational risks arising from records management, retention, disposal, GIPA obligations, and NSW State Records Act compliance.",
+      parent:'SR-05', risks:[]
+    },
+    int: {
+      id:'int', name:'Regulatory Intelligence Risk Register', code:'INT',
+      owner:'Director ISI', isEnterprise:false,
+      desc:"Risks to NRAR's intelligence collection, analysis, and dissemination capability.",
+      parent:'NR-F', risks:[]
+    },
+  };
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════════════════
