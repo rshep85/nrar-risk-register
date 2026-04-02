@@ -311,7 +311,7 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
     </div>
     <div class="table-wrap" style="border:none;border-radius:0;">
       <table class="risk-table">
-        <thead><tr><th>Risk ID</th><th>Risk Title</th><th>Register</th><th>Inherent</th><th>Controls</th><th>Residual</th><th>CI Status</th><th>Owner</th><th>Next Review</th></tr></thead>
+        <thead><tr><th>Risk ID</th><th>Risk Title</th><th>Register</th><th style="cursor:pointer;user-select:none;" onclick="toggleSort('board','inh')">Inherent<span id="board-sort-inh"></span></th><th>Controls</th><th style="cursor:pointer;user-select:none;" onclick="toggleSort('board','res')">Residual<span id="board-sort-res"></span></th><th>CI Status</th><th>Control Owner</th><th>Next Review</th></tr></thead>
         <tbody id="board-table-body"></tbody>
       </table>
     </div>
@@ -370,7 +370,7 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
   </div>
   <div class="table-wrap">
     <table class="risk-table">
-      <thead><tr><th>Risk ID</th><th>Title</th><th>Inherent</th><th>Controls</th><th>Residual</th><th>Owner</th><th>CI Status</th><th>CI Due</th><th>Next Review</th><th></th></tr></thead>
+      <thead><tr><th>Risk ID</th><th>Title</th><th style="cursor:pointer;user-select:none;" onclick="toggleSort('enterprise','inh')">Inherent<span id="ent-sort-inh"></span></th><th>Controls</th><th style="cursor:pointer;user-select:none;" onclick="toggleSort('enterprise','res')">Residual<span id="ent-sort-res"></span></th><th>Control Owner</th><th>CI Status</th><th>CI Due</th><th>Next Review</th><th></th></tr></thead>
       <tbody id="enterprise-tbody"></tbody>
     </table>
   </div>
@@ -402,7 +402,7 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
     </div>
     <div class="table-wrap">
       <table class="risk-table">
-        <thead><tr><th>Risk ID</th><th>Title</th><th>Inherent</th><th>Controls</th><th>Residual</th><th>Owner</th><th>CI Status</th><th>Escalated to ERR?</th><th></th></tr></thead>
+        <thead><tr><th>Risk ID</th><th>Title</th><th style="cursor:pointer;user-select:none;" onclick="toggleSort('op','inh')">Inherent<span id="op-sort-inh"></span></th><th>Controls</th><th style="cursor:pointer;user-select:none;" onclick="toggleSort('op','res')">Residual<span id="op-sort-res"></span></th><th>Control Owner</th><th>CI Status</th><th>Escalated to ERR?</th><th></th></tr></thead>
         <tbody id="op-tbody"></tbody>
       </table>
     </div>
@@ -534,6 +534,22 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
       </tbody></table>
     </div></div>
   </div>
+
+  <div class="card mt-20">
+    <div class="card-header"><h3>Risk Category Taxonomy — NRAR Register</h3><span style="font-size:11px;color:rgba(255,255,255,0.4);font-style:italic;">Used in Add/Edit Risk dropdowns · Operational register categories to be finalised</span></div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <div class="section-title" style="margin-bottom:10px;">Enterprise Risk Register (ERR)</div>
+          <div id="cat-taxonomy-ent"></div>
+        </div>
+        <div>
+          <div class="section-title" style="margin-bottom:10px;">Operational Registers (DG · RIM · INT)</div>
+          <div id="cat-taxonomy-ops"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- CHANGE LOG -->
@@ -556,7 +572,17 @@ code{background:var(--off);border:1px solid var(--border);padding:1px 5px;border
     <div class="modal-body">
       <div class="form-row">
         <div class="form-group"><label class="form-label">Risk ID *</label><input class="form-control" id="r-id" placeholder="e.g. SR-01, DG-01"></div>
-        <div class="form-group"><label class="form-label">Category</label><input class="form-control" id="r-cat" placeholder="e.g. Strategic | Regulatory Effectiveness"></div>
+        <div class="form-group"><label class="form-label">Category</label>
+          <div style="display:flex;gap:6px;">
+            <select class="form-control" id="r-cat-primary" onchange="updateCatSub('r')" style="flex:1;">
+              <option value="">— Primary —</option>
+            </select>
+            <select class="form-control" id="r-cat-sub" style="flex:1;">
+              <option value="">— Sub-category —</option>
+            </select>
+          </div>
+          <input class="form-control" id="r-cat" style="display:none;">
+        </div>
       </div>
       <div class="form-group"><label class="form-label">Risk Title *</label><input class="form-control" id="r-title"></div>
       <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="r-desc" rows="3"></textarea></div>
@@ -869,6 +895,128 @@ function logChange(action, details) {
 }
 
 // ════════════════════════════════════════════════════════════════════════
+// RISK CATEGORY TAXONOMY
+// ════════════════════════════════════════════════════════════════════════
+const RISK_CATEGORIES = {
+  enterprise: [
+    { primary:'Regulatory Effectiveness', subs:['Governance & Decision-Making','Information & Data','Legal & Regulatory Integrity','ICT & Technology','Regulated Entity Behaviour','General'] },
+    { primary:'Strategic', subs:['Financial Sustainability','Strategy Delivery','Policy & Legislative Change','Integrity & Independence','General'] },
+    { primary:'Water Market & Industry', subs:['Regulated Entity Behaviour & Capability','Market Integrity','Corporate Ownership & Enforcement','General'] },
+    { primary:'Environmental & Geographic', subs:['Hydrological Variability & Climate','Catchment Sensitivity & Cultural Risk','General'] },
+    { primary:'Stakeholder Trust & Confidence', subs:['Reputation & Public Confidence','Cultural Engagement','Regulated Community Relations','General'] },
+    { primary:'Legal & Regulatory Integrity', subs:['Enforcement Precedent','Judicial Review','Governance & Decision-Making','General'] },
+    { primary:'Workforce', subs:['Workforce Stability & Retention','Capability & Skills','Key Person Dependency','General'] },
+    { primary:'ICT & Cybersecurity', subs:['Information Security & Privacy','System Availability','Funding & Roadmap','General'] },
+    { primary:'WHS', subs:['Field Safety','Operational Safety','Reputation','General'] },
+  ],
+  dg: [
+    { primary:'Data Governance', subs:['Data Quality','Data Management','Information Asset Governance','General'] },
+    { primary:'Information & Data', subs:['External Data Dependency','Internal Data Integrity','General'] },
+    { primary:'Other', subs:['General'] },
+  ],
+  rim: [
+    { primary:'Records Management', subs:['Retention & Disposal','GIPA Obligations','NSW State Records Act','General'] },
+    { primary:'Information Management', subs:['Access & Security','Compliance','General'] },
+    { primary:'Other', subs:['General'] },
+  ],
+  int: [
+    { primary:'Regulatory Intelligence', subs:['Intelligence Collection','Analysis & Dissemination','Capability','General'] },
+    { primary:'Information Security', subs:['Sensitive Information Handling','General'] },
+    { primary:'Other', subs:['General'] },
+  ],
+};
+
+function getCategoryList(regId) {
+  const r = state.registers[regId];
+  if (!r) return RISK_CATEGORIES.enterprise;
+  if (r.isEnterprise) return RISK_CATEGORIES.enterprise;
+  return RISK_CATEGORIES[regId] || [{ primary:'General', subs:['General'] }];
+}
+
+function populateCatDropdowns(prefix, regId, currentCat) {
+  const cats = getCategoryList(regId);
+  const primSel = document.getElementById(prefix+'-cat-primary');
+  const subSel  = document.getElementById(prefix+'-cat-sub');
+  if (!primSel || !subSel) return;
+  primSel.innerHTML = '<option value="">— Primary category —</option>' +
+    cats.map(c=>`<option value="${c.primary}">${c.primary}</option>`).join('');
+  if (currentCat) {
+    const parts = currentCat.split('|').map(p=>p.trim());
+    const matchPrim = cats.find(c=>c.primary===parts[0]);
+    if (matchPrim) {
+      primSel.value = matchPrim.primary;
+      subSel.innerHTML = '<option value="">— Sub-category —</option>' +
+        matchPrim.subs.map(s=>`<option value="${s}">${s}</option>`).join('');
+      if (parts[1]) subSel.value = parts[1];
+    } else {
+      primSel.innerHTML += `<option value="${parts[0]}">${parts[0]}</option>`;
+      primSel.value = parts[0];
+      subSel.innerHTML = '<option value="">— Sub-category —</option>';
+      if (parts[1]) subSel.innerHTML += `<option value="${parts[1]}" selected>${parts[1]}</option>`;
+    }
+  } else {
+    subSel.innerHTML = '<option value="">— Sub-category —</option>';
+  }
+}
+
+function updateCatSub(prefix) {
+  const regId = prefix==='r' ? editingRegId : (wData ? wData.register : null);
+  const cats = getCategoryList(regId);
+  const primSel = document.getElementById(prefix+'-cat-primary');
+  const subSel  = document.getElementById(prefix+'-cat-sub');
+  if (!primSel || !subSel) return;
+  const chosen = cats.find(c=>c.primary===primSel.value);
+  subSel.innerHTML = '<option value="">— Sub-category —</option>' +
+    (chosen ? chosen.subs.map(s=>`<option value="${s}">${s}</option>`).join('') : '');
+}
+
+function getCatValue(prefix) {
+  const primSel = document.getElementById(prefix+'-cat-primary');
+  const subSel  = document.getElementById(prefix+'-cat-sub');
+  if (!primSel) return '';
+  const prim = primSel.value;
+  const sub  = subSel ? subSel.value : '';
+  if (!prim) return sub || '';
+  if (!sub || sub==='General') return prim;
+  return prim+' | '+sub;
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// SORT STATE
+// ════════════════════════════════════════════════════════════════════════
+const sortState = {
+  board:      { col:'res', dir:1 },
+  enterprise: { col:'res', dir:1 },
+  op:         { col:'res', dir:1 },
+};
+const RATING_ORDER = { CRITICAL:0, HIGH:1, MEDIUM:2, LOW:3, '—':4 };
+
+function sortRisks(risks, col, dir) {
+  return [...risks].sort((a,b)=>{
+    const sa = col==='inh' ? score(a.inhL,a.inhC) : score(a.resL,a.resC);
+    const sb = col==='inh' ? score(b.inhL,b.inhC) : score(b.resL,b.resC);
+    return dir===1 ? RATING_ORDER[rating(sa)]-RATING_ORDER[rating(sb)] : RATING_ORDER[rating(sb)]-RATING_ORDER[rating(sa)];
+  });
+}
+
+function toggleSort(table, col) {
+  const s = sortState[table];
+  if (s.col===col) s.dir = s.dir===1 ? -1 : 1;
+  else { s.col=col; s.dir=1; }
+  if (table==='board')      renderBoardTable();
+  if (table==='enterprise') renderEnterpriseTable();
+  if (table==='op')         renderOpTable();
+}
+
+function sortArrow(table, col) {
+  const s = sortState[table];
+  if (s.col!==col) return '<span style="opacity:0.28;font-size:9px;margin-left:2px;">⇅</span>';
+  return s.dir===1
+    ? '<span style="font-size:9px;margin-left:2px;">▼</span>'
+    : '<span style="font-size:9px;margin-left:2px;">▲</span>';
+}
+
+// ════════════════════════════════════════════════════════════════════════
 // SHAREPOINT SYNC
 // ════════════════════════════════════════════════════════════════════════
 
@@ -970,7 +1118,11 @@ function renderBoardTiles() {
 
 function renderBoardTable() {
   const fv = document.getElementById('board-filter')?.value||'';
-  const risks = allRisks().filter(r => !fv || rating(score(r.resL,r.resC))===fv || rating(score(r.inhL,r.inhC))===fv);
+  const { col, dir } = sortState.board;
+  let risks = allRisks().filter(r => !fv || rating(score(r.resL,r.resC))===fv || rating(score(r.inhL,r.inhC))===fv);
+  risks = sortRisks(risks, col, dir);
+  const bi = document.getElementById('board-sort-inh'); if(bi) bi.innerHTML = sortArrow('board','inh');
+  const br = document.getElementById('board-sort-res'); if(br) br.innerHTML = sortArrow('board','res');
   document.getElementById('board-table-body').innerHTML = risks.map(r=>{
     const od = overdue(r.ciDate,r.ciStatus);
     return `<tr>
@@ -981,7 +1133,7 @@ function renderBoardTable() {
       <td>${ctrlBadge(r.ctrlEff)}</td>
       <td>${ratBadge(rating(score(r.resL,r.resC)))}</td>
       <td>${ciBadge(r.ciStatus)}${od?'<span class="badge badge-overdue" style="margin-left:4px;font-size:9px;">⏰</span>':''}</td>
-      <td class="text-small">${r.owner||'—'}</td>
+      <td class="text-small">${r.ctrlOwner||'—'}</td>
       <td class="text-small font-mono">${r.nextReview||'—'}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);">No risks match filter.</td></tr>';
@@ -1048,7 +1200,7 @@ function renderELTAgenda() {
       </div>
       <div style="font-size:12px;color:var(--muted);"><strong>CI Action:</strong> ${(r.ciAction||'').substring(0,120)}${(r.ciAction||'').length>120?'…':''}</div>
       <div class="agenda-meta">
-        <span>👤 ${r.ciOwner||'—'}</span>
+        <span>🔧 <strong style="color:var(--dark);font-size:10.5px;">Control Owner:</strong> ${r.ctrlOwner||'—'}</span>
         <span>📅 ${r.ciDate||'—'}</span>
         <span>${ciBadge(r.ciStatus)}</span>
         <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="openEditRisk('${r.id}','${r._reg}')">✏ Update</button>
@@ -1081,7 +1233,7 @@ function exportAgenda() {
   let txt=`NRAR ELT WEEKLY TACTICAL MEETING\nDate: ${d}\nChair: ${ch}\n\nAGENDA — RISK ITEMS\n${'─'.repeat(60)}\n\n`;
   risks.forEach((r,i)=>{
     txt+=`${i+1}. [${rating(score(r.resL,r.resC))}] ${r.id} — ${r.title}\n`;
-    txt+=`   Owner: ${r.owner||'—'} | CI Owner: ${r.ciOwner||'—'} | Due: ${r.ciDate||'—'} | Status: ${r.ciStatus||'—'}\n`;
+    txt+=`   Control Owner: ${r.ctrlOwner||'—'} | CI Owner: ${r.ciOwner||'—'} | Due: ${r.ciDate||'—'} | Status: ${r.ciStatus||'—'}\n`;
     txt+=`   Action: ${(r.ciAction||'').substring(0,200)}\n\n`;
   });
   const blob=new Blob([txt],{type:'text/plain'});
@@ -1104,10 +1256,14 @@ function setRegFilter(el, which, f) {
 function renderEnterpriseTable() {
   const search = document.getElementById('enterprise-search')?.value.toLowerCase()||'';
   const errId = Object.keys(state.registers).find(k=>state.registers[k].isEnterprise) || 'enterprise';
-  const risks = (state.registers[errId]?.risks||[]).filter(r=>{
+  const { col, dir } = sortState.enterprise;
+  let risks = (state.registers[errId]?.risks||[]).filter(r=>{
     const rr=rating(score(r.resL,r.resC));
-    return (enterpriseFilter==='ALL'||rr===enterpriseFilter) && (!search||r.id.toLowerCase().includes(search)||r.title.toLowerCase().includes(search)||(r.owner||'').toLowerCase().includes(search));
+    return (enterpriseFilter==='ALL'||rr===enterpriseFilter) && (!search||r.id.toLowerCase().includes(search)||r.title.toLowerCase().includes(search)||(r.ctrlOwner||'').toLowerCase().includes(search));
   });
+  risks = sortRisks(risks, col, dir);
+  const ei = document.getElementById('ent-sort-inh'); if(ei) ei.innerHTML = sortArrow('enterprise','inh');
+  const er = document.getElementById('ent-sort-res'); if(er) er.innerHTML = sortArrow('enterprise','res');
   document.getElementById('enterprise-tbody').innerHTML = risks.map(r=>{
     const od=overdue(r.ciDate,r.ciStatus);
     return `<tr>
@@ -1116,7 +1272,7 @@ function renderEnterpriseTable() {
       <td>${ratBadge(rating(score(r.inhL,r.inhC)))}</td>
       <td>${ctrlBadge(r.ctrlEff)}</td>
       <td>${ratBadge(rating(score(r.resL,r.resC)))}</td>
-      <td class="text-small">${r.owner||'—'}</td>
+      <td class="text-small">${r.ctrlOwner||'—'}</td>
       <td>${ciBadge(r.ciStatus)}${od?'<span class="badge badge-overdue" style="margin-left:4px;font-size:9px;">⏰</span>':''}</td>
       <td class="text-small font-mono">${r.ciDate||'—'}</td>
       <td class="text-small font-mono">${r.nextReview||'—'}</td>
@@ -1172,17 +1328,21 @@ function hideOpReg() {
 function renderOpTable() {
   if(!currentRegister) return;
   const search = document.getElementById('op-search')?.value.toLowerCase()||'';
-  const risks = (state.registers[currentRegister]?.risks||[]).filter(r=>{
+  const { col, dir } = sortState.op;
+  let risks = (state.registers[currentRegister]?.risks||[]).filter(r=>{
     const rr=rating(score(r.resL,r.resC));
     return (opFilter==='ALL'||rr===opFilter) && (!search||r.id.toLowerCase().includes(search)||r.title.toLowerCase().includes(search));
   });
+  risks = sortRisks(risks, col, dir);
+  const oi = document.getElementById('op-sort-inh'); if(oi) oi.innerHTML = sortArrow('op','inh');
+  const or2 = document.getElementById('op-sort-res'); if(or2) or2.innerHTML = sortArrow('op','res');
   document.getElementById('op-tbody').innerHTML = risks.map(r=>`<tr>
     <td><span class="risk-id">${r.id}</span></td>
     <td><strong style="font-size:12px;">${r.title}</strong></td>
     <td>${ratBadge(rating(score(r.inhL,r.inhC)))}</td>
     <td>${ctrlBadge(r.ctrlEff)}</td>
     <td>${ratBadge(rating(score(r.resL,r.resC)))}</td>
-    <td class="text-small">${r.owner||'—'}</td>
+    <td class="text-small">${r.ctrlOwner||'—'}</td>
     <td>${ciBadge(r.ciStatus)}</td>
     <td class="text-small">${r.escalatedTo||'No'}</td>
     <td><div class="flex gap-4">
@@ -1206,6 +1366,7 @@ function openAddRisk(regId) {
   const reg = state.registers[regId];
   const num = (reg?.risks||[]).length+1;
   document.getElementById('r-id').value = `${reg?.code||'RK'}-${String(num).padStart(2,'0')}`;
+  populateCatDropdowns('r', regId, '');
   openModal('risk-modal');
 }
 
@@ -1216,7 +1377,7 @@ function openEditRisk(riskId, regId) {
   editingRisk = risk; editingRegId = regId;
   document.getElementById('risk-modal-title').textContent = `Edit Risk — ${riskId}`;
   const f = id => document.getElementById(id);
-  f('r-id').value=risk.id; f('r-cat').value=risk.category||''; f('r-title').value=risk.title||'';
+  f('r-id').value=risk.id; f('r-title').value=risk.title||'';
   f('r-desc').value=risk.desc||''; f('r-cause').value=risk.cause||''; f('r-cons').value=risk.consequence||'';
   f('r-il').value=risk.inhL||''; f('r-ic').value=risk.inhC||'';
   f('r-ctrl').value=risk.controls||''; f('r-ctrl-owner').value=risk.ctrlOwner||'';
@@ -1230,6 +1391,7 @@ function openEditRisk(riskId, regId) {
   f('r-next-review').value=risk.nextReview||''; f('r-escalated').value=risk.escalatedTo||'';
   const errId = Object.keys(state.registers).find(k=>state.registers[k].isEnterprise)||'enterprise';
   f('esc-to-field').classList.toggle('hidden', regId===errId);
+  populateCatDropdowns('r', regId, risk.category||'');
   calcModalScores();
   openModal('risk-modal');
 }
@@ -1257,7 +1419,7 @@ function saveRisk() {
   if(!id||!title){toast('Risk ID and Title are required','error');return;}
 
   const risk = {
-    id, category:f('r-cat'), title, desc:f('r-desc'), cause:f('r-cause'), consequence:f('r-cons'),
+    id, category:getCatValue('r'), title, desc:f('r-desc'), cause:f('r-cause'), consequence:f('r-cons'),
     inhL:parseInt(f('r-il'))||0, inhC:parseInt(f('r-ic'))||0,
     controls:f('r-ctrl'), ctrlOwner:f('r-ctrl-owner'), ctrlEff:f('r-ctrl-eff'),
     resL:parseInt(f('r-rl'))||0, resC:parseInt(f('r-rc'))||0,
@@ -1727,6 +1889,35 @@ function showPage(id){
   if(id==='elt'){renderELTAgenda();renderStandingItems();}
   if(id==='operational'){renderRegCards();hideOpReg();}
   if(id==='changelog') renderChangelog();
+  if(id==='framework') renderCategoryTaxonomy();
+}
+
+function renderCategoryTaxonomy() {
+  const entEl = document.getElementById('cat-taxonomy-ent');
+  const opsEl = document.getElementById('cat-taxonomy-ops');
+  if (!entEl || !opsEl) return;
+
+  const renderList = (cats) => cats.map(c => `
+    <div style="margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:var(--navy);padding:5px 9px;background:var(--teal-pale);border-radius:5px 5px 0 0;border-left:3px solid var(--teal);">${c.primary}</div>
+      <div style="padding:5px 9px;background:var(--off);border-radius:0 0 5px 5px;border-left:3px solid var(--border);font-size:11.5px;color:var(--muted);">
+        ${c.subs.filter(s=>s!=='General').map(s=>`<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 7px;background:white;border:1px solid var(--border);border-radius:10px;font-size:11px;">${s}</span>`).join('')}
+      </div>
+    </div>`).join('');
+
+  entEl.innerHTML = renderList(RISK_CATEGORIES.enterprise);
+
+  const opRegs = [
+    { name:'Data Governance (DG)', key:'dg' },
+    { name:'Records & Info Mgmt (RIM)', key:'rim' },
+    { name:'Regulatory Intelligence (INT)', key:'int' },
+  ];
+  opsEl.innerHTML = opRegs.map(reg => `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">${reg.name}</div>
+      ${renderList(RISK_CATEGORIES[reg.key])}
+      <div style="font-size:11px;color:var(--muted);font-style:italic;padding:4px 8px;background:var(--gold-pale);border-radius:4px;border-left:2px solid var(--gold);">Categories not yet finalised — update in source code when confirmed</div>
+    </div>`).join('');
 }
 
 function showTab(id){
